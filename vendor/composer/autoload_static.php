@@ -58,10 +58,6 @@ class ComposerStaticInit481aa153a57eeb28073db337a4b82fbd
             'Illuminate\\Contracts\\' => 21,
             'Illuminate\\Container\\' => 21,
         ),
-        'H' => 
-        array (
-            'Hadi\\Addressable\\' => 17,
-        ),
         'D' => 
         array (
             'Doctrine\\Inflector\\' => 19,
@@ -69,6 +65,10 @@ class ComposerStaticInit481aa153a57eeb28073db337a4b82fbd
         'C' => 
         array (
             'Carbon\\' => 7,
+        ),
+        'A' => 
+        array (
+            'Awalhadi\\Addressable\\' => 21,
         ),
     );
 
@@ -152,10 +152,6 @@ class ComposerStaticInit481aa153a57eeb28073db337a4b82fbd
         array (
             0 => __DIR__ . '/..' . '/illuminate/container',
         ),
-        'Hadi\\Addressable\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
-        ),
         'Doctrine\\Inflector\\' => 
         array (
             0 => __DIR__ . '/..' . '/doctrine/inflector/lib/Doctrine/Inflector',
@@ -163,6 +159,10 @@ class ComposerStaticInit481aa153a57eeb28073db337a4b82fbd
         'Carbon\\' => 
         array (
             0 => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon',
+        ),
+        'Awalhadi\\Addressable\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src',
         ),
     );
 

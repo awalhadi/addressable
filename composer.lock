@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eeb9421290df3039aaa0f48ba94a0892",
+    "content-hash": "60e4481e3bcce592533def4315ad2572",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -490,7 +490,7 @@
         },
         {
             "name": "jackpopp/geodistance",
-            "version": "dev-master",
+            "version": "1.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jackpopp/geodistance.git",
@@ -508,7 +508,6 @@
             "require-dev": {
                 "illuminate/database": "*"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -753,7 +752,7 @@
         },
         {
             "name": "rinvex/countries",
-            "version": "dev-master",
+            "version": "v8.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rinvex/countries.git",
@@ -772,7 +771,6 @@
                 "codedungeon/phpunit-result-printer": "^0.31.0",
                 "phpunit/phpunit": "^9.5.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -1847,10 +1845,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "jackpopp/geodistance": 20,
-        "rinvex/countries": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

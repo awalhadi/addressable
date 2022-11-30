@@ -3,8 +3,8 @@
   "description": "Laravel Eloquent address management library. Manage address more than one model",
   "type": "library",
   "require": {
-    "jackpopp/geodistance": "dev-master",
-    "rinvex/countries": "dev-master"
+    "jackpopp/geodistance": "^1.2.3",
+    "rinvex/countries": "^8.1.1"
   },
   "license": "MIT",
   "autoload": {

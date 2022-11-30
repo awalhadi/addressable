@@ -508,8 +508,8 @@
         },
         {
             "name": "jackpopp/geodistance",
-            "version": "dev-master",
-            "version_normalized": "dev-master",
+            "version": "1.2.3",
+            "version_normalized": "1.2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/jackpopp/geodistance.git",
@@ -528,7 +528,6 @@
                 "illuminate/database": "*"
             },
             "time": "2015-07-07T10:58:38+00:00",
-            "default-branch": true,
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -783,8 +782,8 @@
         },
         {
             "name": "rinvex/countries",
-            "version": "dev-master",
-            "version_normalized": "dev-master",
+            "version": "v8.1.1",
+            "version_normalized": "8.1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rinvex/countries.git",
@@ -804,7 +803,6 @@
                 "phpunit/phpunit": "^9.5.0"
             },
             "time": "2022-05-01T03:39:46+00:00",
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
