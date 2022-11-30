@@ -19,7 +19,7 @@
 1. Install the package via composer:
 
     ```shell
-    composer require hadi/laravel-addressable
+    composer require awalhadi/addressable
     ```
 
 <!-- 2. Publish resources (migrations and config files):
@@ -38,7 +38,7 @@
 
 ## Usage
 
-To add addresses support to your eloquent models simply use `\Hadi\Addressable\Traits\Addressable` trait.
+To add addresses support to your eloquent models simply use `\Awalhadi\Addressable\Traits\Addressable` trait.
 
 ### Manage your addresses
 
