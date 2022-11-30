@@ -1,29 +1,29 @@
 {
-    "name": "awalhadi/addressable",
-    "description": "Laravel Eloquent address management library. Manage address more than one model",
-    "type": "library",
-    "require": {
-        "jackpopp/geodistance": "dev-master",
-        "rinvex/countries": "dev-master"
-    },
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Awalhadi\\Addressable\\": "src/"
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Hadi\\Addressable\\AddressableServiceProvider"
-            ]
-        }
-    },
-    "authors": [
-        {
-            "name": "A Awal Hadi",
-            "email": "awalhadi5@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev"
+  "name": "awalhadi/addressable",
+  "description": "Laravel Eloquent address management library. Manage address more than one model",
+  "type": "library",
+  "require": {
+    "jackpopp/geodistance": "dev-master",
+    "rinvex/countries": "dev-master"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Awalhadi\\Addressable\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Awalhadi\\Addressable\\AddressableServiceProvider"
+      ]
+    }
+  },
+  "authors": [
+    {
+      "name": "A Awal Hadi",
+      "email": "awalhadi5@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev"
 }
