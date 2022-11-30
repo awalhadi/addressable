@@ -156,4 +156,4 @@ Hadi is a simple developer, specialized in integrated enterprise solutions for S
 
 This software is released under [The MIT License (MIT)](LICENSE).
 
-(c) 2022 awalhadi, Some rights reserved.
+(c) 2022 awalhadi, All rights reserved.
