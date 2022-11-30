@@ -1,0 +1,29 @@
+{
+    "name": "hadi/addressable",
+    "description": "Laravel Eloquent address management library. Manage address more than one model",
+    "type": "library",
+    "require": {
+        "jackpopp/geodistance": "dev-master",
+        "rinvex/countries": "dev-master"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Hadi\\Addressable\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Hadi\\Addressable\\AddressableServiceProvider"
+            ]
+        }
+    },
+    "authors": [
+        {
+            "name": "A Awal Hadi",
+            "email": "awalhadi5@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}

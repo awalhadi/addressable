@@ -1,0 +1,28 @@
+{
+    "name": "jackpopp/geodistance",
+    "description": "Search for locations within a radius using latitude and longitude values with your eloquent models.",
+    "keywords": ["search", "searching", "distance", "latitude", "longitude", "radius", "miles", "kilometers"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jack Hannigan Popp",
+            "email": "jack@jackpopp.com"
+        }
+    ],
+    "require": {
+        "illuminate/database": "*"
+    },
+    "require-dev": {
+        "illuminate/database": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jackpopp\\GeoDistance\\": "src/Jackpopp/GeoDistance"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jackpopp\\GeoDistance\\": "src/Jackpopp/GeoDistance"
+        }
+    }
+}
