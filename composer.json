@@ -1,5 +1,5 @@
 {
-    "name": "hadi/addressable",
+    "name": "awalhadi/addressable",
     "description": "Laravel Eloquent address management library. Manage address more than one model",
     "type": "library",
     "require": {
@@ -9,7 +9,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Hadi\\Addressable\\": "src/"
+            "Awalhadi\\Addressable\\": "src/"
         }
     },
     "extra": {

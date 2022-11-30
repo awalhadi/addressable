@@ -1,8 +1,8 @@
 <?php
-namespace Hadi\Addressable\Traits;
+namespace Awalhadi\Addressable\Traits;
 
-use Hadi\Addressable\Models\Address;
 use Illuminate\Support\Collection;
+use Awalhadi\Addressable\Models\Address;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 

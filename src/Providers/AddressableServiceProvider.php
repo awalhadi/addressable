@@ -1,6 +1,6 @@
 <?php
 
-namespace Hadi\Addressable\Providers;
+namespace Awalhadi\Addressable\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
