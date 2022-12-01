@@ -16,10 +16,6 @@ class AddressableServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-
-        // load views
-        $this->loadViewsFrom(__DIR__."/../views", 'addressable');
 
         // load database
         $this->loadMigrationsFrom(__DIR__."/../database/migrations");

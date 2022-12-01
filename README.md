@@ -22,6 +22,11 @@
    php artisan migrate
    ```
 
+3. Public Config file
+   ```shell
+   php artisan vendor:publish --provider="Awalhadi\Addressable\Providers\AddressableServiceProvider" --tag="config"
+   ```
+
 ---
 
 Setup done
