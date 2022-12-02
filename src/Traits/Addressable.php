@@ -61,10 +61,10 @@ trait Addressable
     /**
      * Find addressables by distance.
      *
-     * @param string $distance
-     * @param string $unit
      * @param string $latitude
      * @param string $longitude
+     * @param string $distance
+     * @param string $unit
      *
      * @return \Illuminate\Support\Query
      */
@@ -76,10 +76,19 @@ trait Addressable
             'mile' => 'miles'
         ];
         $distanceType = $units[$unit] ?? 'kilometers';
+        // dd($latitude, $longitude, $distance, $distanceType);
+        // return self::whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType){
+        //     $q->within($distance, $distanceType, $latitude, $longitude);
+        // });
 
         return $this->whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType, ){
             $q->within($distance, $distanceType, $latitude, $longitude);
         });
+
+
+        // return $this->whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType, ){
+        //     $q->within($distance, $distanceType, $latitude, $longitude);
+        // });
 
     }
 }
