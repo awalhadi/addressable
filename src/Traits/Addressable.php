@@ -1,7 +1,6 @@
 <?php
 namespace Awalhadi\Addressable\Traits;
 
-use Illuminate\Support\Collection;
 use Awalhadi\Addressable\Models\Address;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -70,7 +69,6 @@ trait Addressable
      */
     public static function findByDistance($latitude, $longitude, $distance = 10, $unit = null)
     {
-        // @TODO: this method needs to be refactored!
         $units = [
             'km' => 'kilometers',
             'mile' => 'miles'
@@ -79,10 +77,6 @@ trait Addressable
         return self::whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType){
             $q->within($distance, $distanceType, $latitude, $longitude);
         });
-
-        // return $this->whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType, ){
-        //     $q->within($distance, $distanceType, $latitude, $longitude);
-        // });
 
     }
 }

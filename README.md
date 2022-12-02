@@ -98,12 +98,14 @@ $user->addresses();
 
 
 // Find all users within 5 kilometers radius from the lat/lng 31.2467601/29.9020376
-$fiveKmAddresses = \App\Models\User::findByDistance(5, 'kilometers', '31.2467601', '29.9020376')->get();
+$fiveKmAddresses = \App\Models\User::findByDistance('31.2467601', '29.9020376')->get();
 
-// Alternative method to find users within certain radius
-$user = new \App\Models\User();
-$users = $user->lat('31.2467601')->lng('29.9020376')->within(5, 'kilometers')->get();
+$fiveKmAddresses = \App\Models\User::findByDistance('31.2467601', '29.9020376', 5, 'kilometers')->get();
+
 ```
+
+`findByDistance` methods except four parameters
+`findByDistance(latitude, longitude, distance=10, unit=kilometers)`
 
 ## Changelog
 
