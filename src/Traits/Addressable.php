@@ -68,7 +68,7 @@ trait Addressable
      *
      * @return \Illuminate\Support\Query
      */
-    public function findByDistance($latitude, $longitude, $distance = 10, $unit = null)
+    public static function findByDistance($latitude, $longitude, $distance = 10, $unit = null)
     {
         // @TODO: this method needs to be refactored!
         $units = [
@@ -76,15 +76,9 @@ trait Addressable
             'mile' => 'miles'
         ];
         $distanceType = $units[$unit] ?? 'kilometers';
-        // dd($latitude, $longitude, $distance, $distanceType);
-        // return self::whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType){
-        //     $q->within($distance, $distanceType, $latitude, $longitude);
-        // });
-
-        return $this->whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType, ){
+        return self::whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType){
             $q->within($distance, $distanceType, $latitude, $longitude);
         });
-
 
         // return $this->whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType, ){
         //     $q->within($distance, $distanceType, $latitude, $longitude);
