@@ -80,7 +80,16 @@ trait Addressable
         });
     }
 
-    public static function searchByRadius($latitude, $longitude, $distance = 10, $unit = null)
+    /**
+     * Search users within a specified radius from a given latitude and longitude.
+     *
+     * @param float $latitude The latitude of the center point.
+     * @param float $longitude The longitude of the center point.
+     * @param int $distance The distance in units (e.g., kilometers, miles).
+     * @param string|null $unit The unit for the distance (e.g., 'km' for kilometers, 'mile' for miles).
+     * @return void
+     */
+    public static function searchByRadius($latitude, $longitude, int $distance = 10, $unit = null)
     {
         $units = [
             'km' => 'kilometers',
