@@ -1,4 +1,5 @@
 <?php
+
 namespace Awalhadi\Addressable\Traits;
 
 use Awalhadi\Addressable\Models\Address;
@@ -17,7 +18,7 @@ trait Addressable
 
     abstract public static function deleted($callback);
 
-     /**
+    /**
      * Define a polymorphic one-to-many relationship.
      *
      * @param string $related
@@ -29,24 +30,24 @@ trait Addressable
      * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
 
-     abstract public function morphMany($related, $name, $type = null, $localKey = null);
+    abstract public function morphMany($related, $name, $type = null, $localKey = null);
 
 
-     /**
+    /**
      * Boot the addressable trait for the model.
      *
      * @return void
      */
 
-     public static function bootAddressable()
-     {
-        static::deleted(function(self $model){
+    public static function bootAddressable()
+    {
+        static::deleted(function (self $model) {
             $model->addresses()->delete();
         });
-     }
+    }
 
 
-     /**
+    /**
      * Get all attached addresses to the model.
      *
      * @return \Illuminate\Database\Eloquent\Relations\MorphMany
@@ -74,9 +75,23 @@ trait Addressable
             'mile' => 'miles'
         ];
         $distanceType = $units[$unit] ?? 'kilometers';
-        return self::whereHas('addresses', function($q) use($latitude, $longitude, $distance, $distanceType){
+        return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
             $q->within($distance, $distanceType, $latitude, $longitude);
         });
+    }
 
+    public static function searchByRadius($latitude, $longitude, $distance = 10, $unit = null)
+    {
+        $units = [
+            'km' => 'kilometers',
+            'mile' => 'miles'
+        ];
+        $distanceType = $units[$unit] ?? 'kilometers';
+
+        return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
+            $q->within($distance, $distanceType, $latitude, $longitude);
+        })
+            // ->select(['users.id', 'users.name']) // Specify only the required columns
+            ->with('addresses'); // Eager load addresses relationship
     }
 }
