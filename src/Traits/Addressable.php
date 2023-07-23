@@ -87,7 +87,7 @@ trait Addressable
      * @param float $longitude The longitude of the center point.
      * @param int $distance The distance in units (e.g., kilometers, miles).
      * @param string|null $unit The unit for the distance (e.g., 'km' for kilometers, 'mile' for miles).
-     * @return void
+     * @return \Illuminate\Support\Query
      */
     public static function searchByRadius($latitude, $longitude, int $distance = 10, $unit = null)
     {
