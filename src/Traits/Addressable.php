@@ -91,16 +91,24 @@ trait Addressable
      */
     public static function searchByRadius($latitude, $longitude, int $distance = 10, $unit = null)
     {
-        $units = [
-            'km' => 'kilometers',
-            'mile' => 'miles'
-        ];
-        $distanceType = $units[$unit] ?? 'kilometers';
+        // $units = [
+        //     'km' => 'kilometers',
+        //     'mile' => 'miles'
+        // ];
+        // $distanceType = $units[$unit] ?? 'kilometers';
 
-        return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
-            $q->within($distance, $distanceType, $latitude, $longitude);
-        })
-            // ->select(['users.id', 'users.name']) // Specify only the required columns
-            ->with('addresses'); // Eager load addresses relationship
+        $distanceType = match ($unit) {
+            'km' => 'kilometers',
+            'mile' => 'miles',
+            default => 'kilometers',
+        };
+        // return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
+        //     $q->within($distance, $distanceType, $latitude, $longitude);
+        // })
+        //     // ->select(['users.id', 'users.name']) // Specify only the required columns
+        //     ->with('addresses'); // Eager load addresses relationship
+
+        return self::whereHas('addresses', fn ($q) => $q->within($distance, $distanceType, $latitude, $longitude))
+            ->with('addresses');
     }
 }
