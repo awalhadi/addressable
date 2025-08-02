@@ -1,132 +1,150 @@
-# Laravel Addressable
+# Awalhadi Addressable
 
-**Laravel Addressable** is a polymorphic Laravel package, for management different types of address. You can add addresses to any eloquent model with laravel addressable package. Hope it will help and make easier your life
+Laravel Eloquent address management library. Manage address more than one model.
 
-[![Latest Version](https://img.shields.io/github/release/awalhadi/laravel-addressable.svg?style=flat-square)](https://github.com/awalhadi/laravel-addressable/releases)
+## Requirements
 
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-
-[![Downloads](https://img.shields.io/packagist/dt/awalhadi/laravel-addressable.svg?style=flat-square)](https://packagist.org/packages/awalhadi/laravel-addressable)
-
-# Support me for inspiration and update regular
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/awalhadi)
-
+- PHP 7.4 or higher
+- Laravel 6.0 or higher
 
 ## Installation
 
-1. Install the package via composer:
+```bash
+composer require awalhadi/addressable
+```
 
-   ```shell
-   composer require awalhadi/addressable
-   ```
+## Quick Start
 
-2. Execute database migrates by the following
+1. Publish the migration:
 
-   ```shell
-   php artisan migrate
-   ```
+```bash
+php artisan vendor:publish --provider="Awalhadi\Addressable\Providers\AddressableServiceProvider"
+```
 
-3. Public Config file
-   ```shell
-   php artisan vendor:publish --provider="Awalhadi\Addressable\Providers\AddressableServiceProvider" --tag="config"
-   ```
+2. Run the migration:
 
----
+```bash
+php artisan migrate
+```
 
-Setup done
-
-## Start using
-
-Which model you want to add address, simply use `Addressable` Trait in your eloquent model like below
+3. Add the trait to your model:
 
 ```php
-
 use Awalhadi\Addressable\Traits\Addressable;
 
-class ModelName {
+class User extends Model
+{
     use Addressable;
+
+    // ... your model code
 }
-
 ```
 
-### Manage your addresses
+4. Use the address functionality:
 
 ```php
-// Get instance of your model
-$user = new \App\Models\User::find(1);
+$user = User::find(1);
 
-// Create a new address
+// Add an address
 $user->addresses()->create([
-    'label'        => 'Default Address',
-    'given_name'   => 'A Awal',
-    'family_name'  => 'Hadi',
-    'organization' => 'ITclan BD',
-    'country_code' => 'bd',
-    'street'       => '10 Azompur Uttora',
-    'state'        => 'Rajshahi',
-    'city'         => 'Natore',
-    'postal_code'  => '6400',
-    'lat'          => '24.4547889',
-    'lng'          => '88.9717818',
-    'is_primary'   => true,
-    'is_billing'   => true,
-    'is_shipping' => true,
+    'type' => 'home',
+    'address' => '123 Main St',
+    'city' => 'New York',
+    'state' => 'NY',
+    'postal_code' => '10001',
+    'country' => 'US',
 ]);
 
-// Create multiple new addresses
-$user->addresses()->createMany([
-    [...],
-    [...],
-    [...],
-]);
-
-
-
-// Alternative way of address deletion
-$user->addresses()->where('id', 123)->first()->delete();
+// Get addresses
+$addresses = $user->addresses;
+$primaryAddress = $user->addresses()->isPrimary()->first();
 ```
 
-### Manage your addressable model
+## Development
 
-The API is intuitive and very straight forward, so let's give it a quick look:
+### Prerequisites
 
-```php
-// Get instance of your model
-$user = new \App\Models\User::find(1);
+- PHP 7.4+
+- Composer
+- Git
 
-// Get attached addresses collection
-$user->addresses;
+### Setup
 
-// Get attached addresses query builder
-$user->addresses();
+1. Clone the repository:
 
-
-// Find all users within 5 kilometers radius from the lat/lng 31.2467601/29.9020376
-$fiveKmAddresses = \App\Models\User::findByDistance('31.2467601', '29.9020376')->get();
-
-$fiveKmAddresses = \App\Models\User::findByDistance('31.2467601', '29.9020376', 5, 'kilometers')->get();
-
+```bash
+git clone <repository-url>
+cd packages/awalhadi/addressable
 ```
 
-`findByDistance` methods except four parameters
-`findByDistance(latitude, longitude, distance=10, unit=kilometers)`
+2. Install dependencies:
 
-## Changelog
+```bash
+composer install
+```
 
-## Support
+3. Run tests:
 
-The Generate free qr code:
+```bash
+# Run all tests
+composer test
 
-- [QR Code generator](https://gqrcode.com)
+# Run tests in parallel
+composer test:parallel
 
----
+# Run tests with coverage
+composer test:coverage
 
-👉 If you are interested to step on as the main maintainer of this package, please [reach out to me](https://www.linkedin.com/in/a-awal-hadi/)!
+# Run specific test suite
+./vendor/bin/pest --testsuite=Unit
+./vendor/bin/pest --testsuite=Feature
+./vendor/bin/pest --testsuite=Integration
+```
 
----
+4. Format code:
+
+```bash
+# Format code
+composer format
+
+# Check formatting
+composer format:check
+```
+
+### Testing
+
+The package uses Pest for testing with the following test suites:
+
+- **Unit**: Tests for individual classes and methods
+- **Feature**: Tests for features and integrations
+- **Integration**: Tests for database and external service integrations
+
+### Code Quality
+
+- **PHPUnit/Pest**: Testing framework
+- **Laravel Pint**: Code formatting
+- **GitHub Actions**: CI/CD with multi-version matrix testing
+
+### Supported Versions
+
+| PHP Version | Laravel Version                 | Status |
+| ----------- | ------------------------------- | ------ |
+| 7.4         | 6._, 7._, 8._, 9._, 10._, 11._  | ✅     |
+| 8.0         | 6._, 7._, 8._, 9._, 10._, 11._  | ✅     |
+| 8.1         | 6._, 7._, 8._, 9._, 10._, 11._  | ✅     |
+| 8.2         | 7._, 8._, 9._, 10._, 11._, 12._ | ✅     |
+| 8.3         | 8._, 9._, 10._, 11._, 12.\*     | ✅     |
+| 8.4         | 10._, 11._, 12.\*               | ✅     |
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
 ## License
 
-This software is released under [The MIT License (MIT)](LICENSE).
-
-(c) 2022 awalhadi, All rights reserved.
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

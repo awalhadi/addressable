@@ -1,0 +1,102 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [7.4, 8.0, 8.1, 8.2, 8.3, 8.4]
+        laravel: [6.*, 7.*, 8.*, 9.*, 10.*, 11.*, 12.*]
+        dependency-version: [prefer-stable]
+        exclude:
+          - php: 7.4
+            laravel: 12.*
+          - php: 8.0
+            laravel: 12.*
+          - php: 8.1
+            laravel: 12.*
+          - php: 8.2
+            laravel: 6.*
+          - php: 8.3
+            laravel: 6.*
+          - php: 8.3
+            laravel: 7.*
+          - php: 8.4
+            laravel: 6.*
+          - php: 8.4
+            laravel: 7.*
+          - php: 8.4
+            laravel: 8.*
+          - php: 8.4
+            laravel: 9.*
+
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, iconv, intl
+          tools: composer:v2
+          coverage: none
+
+      - name: Install dependencies
+        run: composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction
+
+      - name: Execute tests (Unit)
+        run: vendor/bin/pest --testsuite=Unit
+
+      - name: Execute tests (Feature)
+        run: vendor/bin/pest --testsuite=Feature
+
+      - name: Execute tests (Integration)
+        run: vendor/bin/pest --testsuite=Integration
+
+  test-parallel:
+    runs-on: ubuntu-latest
+    needs: test
+
+    strategy:
+      matrix:
+        php: [8.2]
+        laravel: [10.*]
+
+    name: Parallel Tests - P${{ matrix.php }} - L${{ matrix.laravel }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, gd, iconv, intl
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Execute tests with coverage
+        run: vendor/bin/pest --parallel --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./build/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
