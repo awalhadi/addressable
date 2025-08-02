@@ -1,7 +1,6 @@
 {
   "name": "awalhadi/addressable",
   "description": "A modern, feature-rich Laravel package for managing addresses with geocoding, validation, caching, and spatial operations. Perfect for e-commerce, CRM systems, and any application requiring robust address management.",
-  "version": "2.0.0",
   "type": "library",
   "keywords": [
     "laravel",

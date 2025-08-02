@@ -1,9 +1,9 @@
 # Laravel Addressable Package
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/awalhadi/addressable.svg?style=flat-square)](https://packagist.org/packages/awalhadi/addressable)
-[![Tests](https://github.com/awalhadi/addressable/actions/workflows/tests.yml/badge.svg)](https://github.com/awalhadi/addressable/actions/workflows/tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/awalhadi/addressable.svg?style=flat-square)](https://packagist.org/packages/awalhadi/addressable)
 [![License](https://img.shields.io/packagist/l/awalhadi/addressable.svg?style=flat-square)](https://packagist.org/packages/awalhadi/addressable)
+[![PHP Version](https://img.shields.io/packagist/php-v/awalhadi/addressable.svg?style=flat-square)](https://packagist.org/packages/awalhadi/addressable)
 
 A modern, feature-rich Laravel package for managing addresses with geocoding, validation, caching, and spatial operations. Perfect for e-commerce, CRM systems, and any application requiring robust address management.
 
