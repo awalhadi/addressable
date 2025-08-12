@@ -335,6 +335,27 @@ class Address extends Model
     }
 
     /**
+     * Scope to get addresses within a certain distance from coordinates.
+     */
+    public function scopeWithin(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
+    {
+        $earthRadius = match ($unit) {
+            'kilometers' => 6371,
+            'miles' => 3959,
+            'meters' => 6371000,
+            default => 6371,
+        };
+
+        $latDelta = $distance / $earthRadius * (180 / M_PI);
+        $lonDelta = $distance / $earthRadius * (180 / M_PI) / cos(deg2rad($latitude));
+
+        return $builder->whereBetween('latitude', [$latitude - $latDelta, $latitude + $latDelta])
+            ->whereBetween('longitude', [$longitude - $lonDelta, $longitude + $lonDelta])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude');
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot(): void
@@ -449,6 +470,159 @@ class Address extends Model
     {
         $distance = $this->distanceTo($address, $unit);
         return $distance !== null && $distance <= $radius;
+    }
+
+    /**
+     * Validate the entire address.
+     */
+    public function isValid(): bool
+    {
+        $errors = $this->getValidationErrors();
+        return empty($errors);
+    }
+
+    /**
+     * Get validation errors for the address.
+     */
+    public function getValidationErrors(): array
+    {
+        $errors = [];
+
+        if (!$this->validatePostalCode()) {
+            $errors['postal_code'] = 'Invalid postal code format';
+        }
+
+        if (!$this->validatePhoneNumber()) {
+            $errors['phone'] = 'Invalid phone number format';
+        }
+
+        if (!$this->validateEmail()) {
+            $errors['email'] = 'Invalid email format';
+        }
+
+        if (!$this->validateCountryCode()) {
+            $errors['country_code'] = 'Invalid country code';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Format postal code according to country standards.
+     */
+    public function formatPostalCode(): ?string
+    {
+        if (!$this->postal_code || !$this->country_code) {
+            return $this->postal_code;
+        }
+
+        $postalCode = trim($this->postal_code);
+
+        return match ($this->country_code) {
+            'US' => $this->formatUSPostalCode($postalCode),
+            'CA' => $this->formatCAPostalCode($postalCode),
+            'GB' => strtoupper($postalCode),
+            default => $postalCode,
+        };
+    }
+
+    /**
+     * Format US postal code.
+     */
+    private function formatUSPostalCode(string $postalCode): string
+    {
+        $postalCode = preg_replace('/[^0-9-]/', '', $postalCode);
+
+        if (strlen($postalCode) === 9) {
+            return substr($postalCode, 0, 5) . '-' . substr($postalCode, 5);
+        }
+
+        return $postalCode;
+    }
+
+    /**
+     * Format Canadian postal code.
+     */
+    private function formatCAPostalCode(string $postalCode): string
+    {
+        $postalCode = strtoupper(preg_replace('/[^A-Z0-9]/', '', $postalCode));
+
+        if (strlen($postalCode) === 6) {
+            return substr($postalCode, 0, 3) . ' ' . substr($postalCode, 3);
+        }
+
+        return $postalCode;
+    }
+
+    /**
+     * Format phone number according to country standards.
+     */
+    public function formatPhoneNumber(): ?string
+    {
+        if (!$this->phone || !$this->country_code) {
+            return $this->phone;
+        }
+
+        $phone = preg_replace('/[^0-9+]/', '', $this->phone);
+
+        return match ($this->country_code) {
+            'US', 'CA' => $this->formatUSPhoneNumber($phone),
+            'GB' => $this->formatGBPhoneNumber($phone),
+            default => $phone,
+        };
+    }
+
+    /**
+     * Format US/Canada phone number.
+     */
+    private function formatUSPhoneNumber(string $phone): string
+    {
+        if (strlen($phone) === 10) {
+            return '(' . substr($phone, 0, 3) . ') ' . substr($phone, 3, 3) . '-' . substr($phone, 6);
+        }
+
+        if (strlen($phone) === 11 && $phone[0] === '1') {
+            return '+1 (' . substr($phone, 1, 3) . ') ' . substr($phone, 4, 3) . '-' . substr($phone, 7);
+        }
+
+        return $phone;
+    }
+
+    /**
+     * Format UK phone number.
+     */
+    private function formatGBPhoneNumber(string $phone): string
+    {
+        if (strlen($phone) === 10) {
+            return substr($phone, 0, 4) . ' ' . substr($phone, 4, 3) . ' ' . substr($phone, 7);
+        }
+
+        return $phone;
+    }
+
+    /**
+     * Reverse geocode the address from coordinates.
+     */
+    public function reverseGeocode(): bool
+    {
+        try {
+            if (!$this->hasCoordinates()) {
+                return false;
+            }
+
+            $geocodingService = app(GeocodingService::class);
+            $result = $geocodingService->reverseGeocode($this->latitude, $this->longitude);
+
+            if ($result) {
+                $this->fill($result);
+                $this->save();
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Reverse geocoding failed for address {$this->id}: " . $e->getMessage());
+        }
+
+        return false;
     }
 
     /**

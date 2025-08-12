@@ -1,38 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Awalhadi\Addressable\Traits;
 
 use Awalhadi\Addressable\Models\Address;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 trait Addressable
 {
     /**
      * Register a deleted model event with the dispatcher.
-     *
-     * @param  \Closure|string  $callback
-     * @return void
      */
     abstract public static function deleted($callback);
 
     /**
      * Define a polymorphic one-to-many relationship.
-     *
-     * @param  string  $related
-     * @param  string  $name
-     * @param  string  $type
-     * @param  string  $id
-     * @param  string  $localKey
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
      */
     abstract public function morphMany($related, $name, $type = null, $localKey = null);
 
     /**
      * Boot the addressable trait for the model.
-     *
-     * @return void
      */
-    public static function bootAddressable()
+    public static function bootAddressable(): void
     {
         static::deleted(function (self $model) {
             $model->addresses()->delete();
@@ -49,56 +40,140 @@ trait Addressable
     }
 
     /**
-     * Find addressables by distance.
-     *
-     * @param  string  $latitude
-     * @param  string  $longitude
-     * @param  string  $distance
-     * @param  string  $unit
-     * @return \Illuminate\Support\Query
+     * Get the primary address.
      */
-    public static function findByDistance($latitude, $longitude, $distance = 10, $unit = null)
+    public function primaryAddress(): ?Address
     {
-        $units = [
-            'km' => 'kilometers',
-            'mile' => 'miles',
-        ];
-        $distanceType = $units[$unit] ?? 'kilometers';
-
-        return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
-            $q->within($distance, $distanceType, $latitude, $longitude);
-        });
+        return $this->addresses()->isPrimary()->first();
     }
 
     /**
-     * Search users within a specified radius from a given latitude and longitude.
-     *
-     * @param  float  $latitude  The latitude of the center point.
-     * @param  float  $longitude  The longitude of the center point.
-     * @param  int  $distance  The distance in units (e.g., kilometers, miles).
-     * @param  string|null  $unit  The unit for the distance (e.g., 'km' for kilometers, 'mile' for miles).
-     * @return \Illuminate\Support\Query
+     * Get the billing address.
      */
-    public static function searchByRadius($latitude, $longitude, int $distance = 10, $unit = null)
+    public function billingAddress(): ?Address
     {
-        // $units = [
-        //     'km' => 'kilometers',
-        //     'mile' => 'miles'
-        // ];
-        // $distanceType = $units[$unit] ?? 'kilometers';
+        return $this->addresses()->isBilling()->first();
+    }
 
+    /**
+     * Get the shipping address.
+     */
+    public function shippingAddress(): ?Address
+    {
+        return $this->addresses()->isShipping()->first();
+    }
+
+    /**
+     * Check if the model has any addresses.
+     */
+    public function hasAddresses(): bool
+    {
+        return $this->addresses()->exists();
+    }
+
+    /**
+     * Check if the model has a primary address.
+     */
+    public function hasPrimaryAddress(): bool
+    {
+        return $this->addresses()->isPrimary()->exists();
+    }
+
+    /**
+     * Get addresses by type.
+     */
+    public function getAddressesByType(string $type): Collection
+    {
+        return $this->addresses()->ofType($type)->get();
+    }
+
+    /**
+     * Get addresses in a specific country.
+     */
+    public function getAddressesInCountry(string $countryCode): Collection
+    {
+        return $this->addresses()->inCountry($countryCode)->get();
+    }
+
+    /**
+     * Get addresses within a specified radius.
+     */
+    public function getAddressesWithinRadius(float $latitude, float $longitude, float $radius, string $unit = 'kilometers'): Collection
+    {
+        return $this->addresses()
+            ->withCoordinates()
+            ->get()
+            ->filter(fn (Address $address) => $address->calculateDistance($latitude, $longitude, $address->latitude, $address->longitude, $unit) <= $radius);
+    }
+
+    /**
+     * Create multiple addresses at once.
+     */
+    public function createManyAddresses(array $addresses): \Illuminate\Database\Eloquent\Collection
+    {
+        $createdAddresses = new \Illuminate\Database\Eloquent\Collection();
+
+        foreach ($addresses as $addressData) {
+            $createdAddresses->push($this->addresses()->create($addressData));
+        }
+
+        return $createdAddresses;
+    }
+
+    /**
+     * Update multiple addresses by type.
+     */
+    public function updateManyAddresses(array $addressUpdates): bool
+    {
+        foreach ($addressUpdates as $type => $data) {
+            $this->addresses()->ofType($type)->update($data);
+        }
+
+        return true;
+    }
+
+    /**
+     * Warm up the address cache for this model.
+     */
+    public function warmAddressCache(): bool
+    {
+        $addresses = $this->addresses()->get();
+
+        foreach ($addresses as $address) {
+            $address->cacheAddress();
+        }
+
+        return true;
+    }
+
+    /**
+     * Find addressables by distance.
+     */
+    public static function findByDistance(float $latitude, float $longitude, float $distance = 10, ?string $unit = null)
+    {
         $distanceType = match ($unit) {
             'km' => 'kilometers',
             'mile' => 'miles',
             default => 'kilometers',
         };
-        // return self::whereHas('addresses', function ($q) use ($latitude, $longitude, $distance, $distanceType) {
-        //     $q->within($distance, $distanceType, $latitude, $longitude);
-        // })
-        //     // ->select(['users.id', 'users.name']) // Specify only the required columns
-        //     ->with('addresses'); // Eager load addresses relationship
 
-        return self::whereHas('addresses', fn ($q) => $q->within($distance, $distanceType, $latitude, $longitude))
+        return self::whereHas('addresses', function ($query) use ($latitude, $longitude, $distance, $distanceType) {
+            $query->within($distance, $distanceType, $latitude, $longitude);
+        });
+    }
+
+    /**
+     * Search addressables within a specified radius.
+     */
+    public static function searchByRadius(float $latitude, float $longitude, float $distance = 10, ?string $unit = null)
+    {
+        $distanceType = match ($unit) {
+            'km' => 'kilometers',
+            'mile' => 'miles',
+            default => 'kilometers',
+        };
+
+        return self::whereHas('addresses', fn ($query) => $query->within($distance, $distanceType, $latitude, $longitude))
             ->with('addresses');
     }
 }

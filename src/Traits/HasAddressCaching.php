@@ -280,6 +280,24 @@ trait HasAddressCaching
     }
 
     /**
+     * Cache address data (alias for cacheAddress).
+     */
+    public function cacheAddressData(): bool
+    {
+        return $this->cacheAddress();
+    }
+
+    /**
+     * Get cached address data (alias for getCachedAddress).
+     */
+    public function getCachedAddressData(): ?array
+    {
+        return $this->getCachedAddress();
+    }
+
+
+
+    /**
      * Get cache statistics for this address.
      */
     public function getCacheStats(): array
