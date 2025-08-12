@@ -19,7 +19,7 @@ return new class extends Migration
 
             // Polymorphic relationship
             $table->string('addressable_type');
-            $table->uuid('addressable_id');
+            $table->foreignId('addressable_id');
 
             // Address type and label
             $table->string('type')->default('general'); // home, work, billing, shipping, etc.
