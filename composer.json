@@ -20,8 +20,7 @@
     "php": "^7.4|^8.0|^8.1|^8.2|^8.3|^8.4",
     "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
     "illuminate/database": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-    "jackpopp/geodistance": "^1.2.3",
-    "rinvex/countries": "^8.1.1"
+    "jackpopp/geodistance": "^1.2.3"
   },
   "require-dev": {
     "orchestra/testbench": "^8.0",
@@ -36,7 +35,10 @@
   "autoload": {
     "psr-4": {
       "Awalhadi\\Addressable\\": "src/"
-    }
+    },
+    "files": [
+      "src/helpers.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

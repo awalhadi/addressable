@@ -158,8 +158,7 @@ trait HasAddressValidation
         }
 
         try {
-            $country = country($countryCode);
-            return $country->getName() !== 'Unknown';
+            return countries()->exists($countryCode);
         } catch (\Exception $e) {
             return false;
         }

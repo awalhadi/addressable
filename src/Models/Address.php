@@ -358,6 +358,32 @@ class Address extends Model
      */
     public function scopeWithin(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
     {
+        // Create bounding box for initial filtering (much faster than calculating distance for every record)
+        $boundingBox = $this->createBoundingBox($latitude, $longitude, $distance, $unit);
+
+        return $builder->whereBetween('latitude', [$boundingBox['min_lat'], $boundingBox['max_lat']])
+            ->whereBetween('longitude', [$boundingBox['min_lon'], $boundingBox['max_lon']])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude');
+    }
+
+    /**
+     * Scope to get addresses within exact distance (uses Haversine formula for precise calculation).
+     */
+    public function scopeWithinExact(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
+    {
+        // First apply bounding box filter for performance
+        $builder = $this->scopeWithin($builder, $distance, $unit, $latitude, $longitude);
+
+        // Then filter by exact distance using Haversine formula
+        return $builder->whereRaw($this->getHaversineDistanceQuery($latitude, $longitude, $unit) . ' <= ?', [$distance]);
+    }
+
+    /**
+     * Get Haversine distance calculation SQL query.
+     */
+    private function getHaversineDistanceQuery(float $latitude, float $longitude, string $unit): string
+    {
         $earthRadius = match ($unit) {
             'kilometers' => 6371,
             'miles' => 3959,
@@ -365,13 +391,13 @@ class Address extends Model
             default => 6371,
         };
 
-        $latDelta = $distance / $earthRadius * (180 / M_PI);
-        $lonDelta = $distance / $earthRadius * (180 / M_PI) / cos(deg2rad($latitude));
-
-        return $builder->whereBetween('latitude', [$latitude - $latDelta, $latitude + $latDelta])
-            ->whereBetween('longitude', [$longitude - $lonDelta, $longitude + $lonDelta])
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude');
+        return "({$earthRadius} * acos(
+            cos(radians({$latitude})) * 
+            cos(radians(latitude)) * 
+            cos(radians(longitude) - radians({$longitude})) + 
+            sin(radians({$latitude})) * 
+            sin(radians(latitude))
+        ))";
     }
 
     /**

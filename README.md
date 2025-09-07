@@ -46,6 +46,19 @@ php artisan vendor:publish --provider="Awalhadi\Addressable\Providers\Addressabl
 php artisan migrate
 ```
 
+### 4. Optimize Package (Recommended)
+
+```bash
+php artisan addressable:optimize
+```
+
+This command optimizes the package for better performance by:
+- Caching country data for faster lookups
+- Optimizing autoload performance
+- Validating data integrity
+
+> 📖 **For detailed optimization guide, see [OPTIMIZATION.md](OPTIMIZATION.md)**
+
 ## 🎯 Quick Start
 
 ### 1. Add Trait to Your Model

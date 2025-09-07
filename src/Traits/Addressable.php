@@ -101,9 +101,18 @@ trait Addressable
     public function getAddressesWithinRadius(float $latitude, float $longitude, float $radius, string $unit = 'kilometers'): Collection
     {
         return $this->addresses()
-            ->withCoordinates()
-            ->get()
-            ->filter(fn (Address $address) => $address->calculateDistance($latitude, $longitude, $address->latitude, $address->longitude, $unit) <= $radius);
+            ->within($radius, $unit, $latitude, $longitude)
+            ->get();
+    }
+
+    /**
+     * Get addresses within exact radius (more precise but slower).
+     */
+    public function getAddressesWithinExactRadius(float $latitude, float $longitude, float $radius, string $unit = 'kilometers'): Collection
+    {
+        return $this->addresses()
+            ->withinExact($radius, $unit, $latitude, $longitude)
+            ->get();
     }
 
     /**

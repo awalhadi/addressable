@@ -107,6 +107,21 @@ return [
             'address' => env('ADDRESSABLE_CACHE_ADDRESS_TTL', 3600), // 1 hour
             'geocoding' => env('ADDRESSABLE_CACHE_GEOCODING_TTL', 86400), // 24 hours
             'validation' => env('ADDRESSABLE_CACHE_VALIDATION_TTL', 604800), // 1 week
+            'countries' => env('ADDRESSABLE_CACHE_COUNTRIES_TTL', 86400), // 24 hours
+        ],
+    ],
+
+    /*
+  |--------------------------------------------------------------------------
+  | Countries Configuration
+  |--------------------------------------------------------------------------
+  */
+    'countries' => [
+        'data_source' => env('ADDRESSABLE_COUNTRIES_DATA_SOURCE', 'internal'), // internal, external
+        'cache_enabled' => env('ADDRESSABLE_COUNTRIES_CACHE_ENABLED', true),
+        'preload_popular' => env('ADDRESSABLE_COUNTRIES_PRELOAD_POPULAR', true),
+        'popular_countries' => [
+            'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'JP', 'CN', 'IN', 'BR', 'MX'
         ],
     ],
 

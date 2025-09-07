@@ -257,8 +257,8 @@ class ValidationService
     public function validateCountryCode(string $countryCode): bool
     {
         try {
-            $country = country($countryCode);
-            return $country->getName() !== 'Unknown';
+            $countryService = app(CountryService::class);
+            return $countryService->exists($countryCode);
         } catch (\Exception $e) {
             return false;
         }
