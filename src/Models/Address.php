@@ -9,6 +9,7 @@ use Awalhadi\Addressable\Events\AddressDeleted;
 use Awalhadi\Addressable\Events\AddressUpdated;
 use Awalhadi\Addressable\Services\GeocodingService;
 use Awalhadi\Addressable\Services\ValidationService;
+use Awalhadi\Addressable\Services\CountryService;
 use Awalhadi\Addressable\Traits\HasSpatialOperations;
 use Awalhadi\Addressable\Traits\HasAddressValidation;
 use Awalhadi\Addressable\Traits\HasAddressCaching;
@@ -184,13 +185,23 @@ class Address extends Model
             return null;
         }
 
-        // Try to get country name from country code using helper
-        try {
-            return country($this->country_code)->getName();
-        } catch (\Exception $e) {
-            Log::warning("Could not get country name for code: {$this->country_code}");
-            return $this->country_code;
+        // Try lightweight country service first
+        $countryName = CountryService::getName($this->country_code);
+        if ($countryName) {
+            return $countryName;
         }
+
+        // Fallback to rinvex/countries if available
+        if (class_exists('Rinvex\Country\Country')) {
+            try {
+                return country($this->country_code)->getName();
+            } catch (\Exception $e) {
+                Log::warning("Could not get country name for code: {$this->country_code}");
+            }
+        }
+
+        // Return country code as fallback
+        return $this->country_code;
     }
 
     /**
