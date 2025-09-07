@@ -39,6 +39,7 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('postal_code')->nullable();
             $table->string('country_code', 2)->nullable();
+            $table->string('country_name')->nullable();
             $table->string('neighborhood')->nullable();
             $table->string('district')->nullable();
 

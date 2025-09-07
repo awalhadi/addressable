@@ -44,7 +44,7 @@ trait Addressable
      */
     public function primaryAddress(): ?Address
     {
-        return $this->addresses()->isPrimary()->first();
+        return $this->addresses()?->isPrimary()?->first() ?? null;
     }
 
     /**
@@ -52,7 +52,7 @@ trait Addressable
      */
     public function billingAddress(): ?Address
     {
-        return $this->addresses()->isBilling()->first();
+        return $this->addresses()?->isBilling()?->first() ?? null;
     }
 
     /**
@@ -60,7 +60,7 @@ trait Addressable
      */
     public function shippingAddress(): ?Address
     {
-        return $this->addresses()->isShipping()->first();
+        return $this->addresses()?->isShipping()?->first() ?? null;
     }
 
     /**
@@ -68,7 +68,7 @@ trait Addressable
      */
     public function hasAddresses(): bool
     {
-        return $this->addresses()->exists();
+        return $this->addresses()?->exists() ?? false;
     }
 
     /**
@@ -76,7 +76,7 @@ trait Addressable
      */
     public function hasPrimaryAddress(): bool
     {
-        return $this->addresses()->isPrimary()->exists();
+        return $this->addresses()?->isPrimary()?->exists() ?? false;
     }
 
     /**
@@ -84,7 +84,7 @@ trait Addressable
      */
     public function getAddressesByType(string $type): Collection
     {
-        return $this->addresses()->ofType($type)->get();
+        return $this->addresses()?->ofType($type)?->get() ?? [];
     }
 
     /**
@@ -92,7 +92,7 @@ trait Addressable
      */
     public function getAddressesInCountry(string $countryCode): Collection
     {
-        return $this->addresses()->inCountry($countryCode)->get();
+        return $this->addresses()?->inCountry($countryCode)?->get() ?? [];
     }
 
     /**
@@ -176,4 +176,6 @@ trait Addressable
         return self::whereHas('addresses', fn ($query) => $query->within($distance, $distanceType, $latitude, $longitude))
             ->with('addresses');
     }
+
+
 }

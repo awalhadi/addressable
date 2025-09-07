@@ -55,6 +55,7 @@ class Address extends Model
         'state',
         'postal_code',
         'country_code',
+        'country_name',
         'neighborhood',
         'district',
         'latitude',
@@ -100,6 +101,17 @@ class Address extends Model
         'deleted_at' => 'datetime',
     ];
 
+    /**
+     * The attributes that should be appended to the model.
+     */
+    protected $appends = [
+        'full_address',
+        'full_name',
+        'country_name',
+        'formatted_phone',
+        'masked_phone',
+        'masked_email',
+    ];
     /**
      * The attributes that should be hidden for arrays.
      */
@@ -151,7 +163,7 @@ class Address extends Model
             $this->city,
             $this->state,
             $this->postal_code,
-            $this->getCountryName(),
+            $this->country_name,
         ]);
 
         return implode(', ', $parts);
@@ -162,10 +174,17 @@ class Address extends Model
      */
     public function getCountryNameAttribute(): ?string
     {
+        // If country_name is already set in the database, return it
+        if ($this->attributes['country_name'] ?? null) {
+            return $this->attributes['country_name'];
+        }
+
+        // If no country_code, return null
         if (!$this->country_code) {
             return null;
         }
 
+        // Try to get country name from country code using helper
         try {
             return country($this->country_code)->getName();
         } catch (\Exception $e) {
