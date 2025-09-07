@@ -1,0 +1,96 @@
+{
+  "name": "awalhadi/addressable",
+  "description": "Ultra-lightweight Laravel package for address management with built-in geocoding, validation, and spatial operations. Zero external dependencies for core functionality.",
+  "type": "library",
+  "keywords": [
+    "laravel",
+    "address",
+    "eloquent",
+    "geocoding",
+    "location",
+    "radius-search",
+    "spatial",
+    "lightweight",
+    "performance"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "A Awal Hadi",
+      "email": "awalhadi5@gmail.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4|^8.0|^8.1|^8.2|^8.3|^8.4",
+    "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+    "illuminate/database": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0"
+  },
+  "suggest": {
+    "rinvex/countries": "For enhanced country data with 250+ countries (optional - package includes 170+ core countries)",
+    "jackpopp/geodistance": "For advanced distance calculations (optional - package includes built-in spatial operations)",
+    "predis/predis": "For Redis caching support (optional - works with any Laravel cache driver)",
+    "ext-redis": "For Redis extension support (optional)"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0",
+    "phpunit/phpunit": "^10.0",
+    "pestphp/pest": "^2.0",
+    "pestphp/pest-plugin-laravel": "^2.0",
+    "laravel/pint": "^1.0",
+    "nunomaduro/collision": "^7.0",
+    "mockery/mockery": "^1.0",
+    "fakerphp/faker": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Awalhadi\\Addressable\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Awalhadi\\Addressable\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Awalhadi\\Addressable\\Providers\\AddressableServiceProvider"
+      ]
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    },
+    "optimize-autoloader": true,
+    "classmap-authoritative": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "test": "pest",
+    "test:coverage": "pest --coverage",
+    "format": "pint",
+    "format:check": "pint --test",
+    "optimize": [
+      "composer dump-autoload --optimize --classmap-authoritative"
+    ],
+    "post-install-cmd": [
+      "@optimize"
+    ],
+    "post-update-cmd": [
+      "@optimize"
+    ]
+  },
+  "scripts-descriptions": {
+    "test": "Run the test suite",
+    "test:coverage": "Run tests with coverage report",
+    "format": "Format code with Laravel Pint",
+    "format:check": "Check code formatting",
+    "optimize": "Optimize Composer autoloader for production"
+  }
+}

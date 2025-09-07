@@ -9,6 +9,7 @@ use Awalhadi\Addressable\Events\AddressDeleted;
 use Awalhadi\Addressable\Events\AddressUpdated;
 use Awalhadi\Addressable\Services\GeocodingService;
 use Awalhadi\Addressable\Services\ValidationService;
+use Awalhadi\Addressable\Services\CountryService;
 use Awalhadi\Addressable\Traits\HasSpatialOperations;
 use Awalhadi\Addressable\Traits\HasAddressValidation;
 use Awalhadi\Addressable\Traits\HasAddressCaching;
@@ -184,13 +185,23 @@ class Address extends Model
             return null;
         }
 
-        // Try to get country name from country code using helper
-        try {
-            return country($this->country_code)->getName();
-        } catch (\Exception $e) {
-            Log::warning("Could not get country name for code: {$this->country_code}");
-            return $this->country_code;
+        // Try lightweight country service first
+        $countryName = CountryService::getName($this->country_code);
+        if ($countryName) {
+            return $countryName;
         }
+
+        // Fallback to rinvex/countries if available
+        if (class_exists('Rinvex\Country\Country')) {
+            try {
+                return country($this->country_code)->getName();
+            } catch (\Exception $e) {
+                Log::warning("Could not get country name for code: {$this->country_code}");
+            }
+        }
+
+        // Return country code as fallback
+        return $this->country_code;
     }
 
     /**
@@ -358,32 +369,6 @@ class Address extends Model
      */
     public function scopeWithin(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
     {
-        // Create bounding box for initial filtering (much faster than calculating distance for every record)
-        $boundingBox = $this->createBoundingBox($latitude, $longitude, $distance, $unit);
-
-        return $builder->whereBetween('latitude', [$boundingBox['min_lat'], $boundingBox['max_lat']])
-            ->whereBetween('longitude', [$boundingBox['min_lon'], $boundingBox['max_lon']])
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude');
-    }
-
-    /**
-     * Scope to get addresses within exact distance (uses Haversine formula for precise calculation).
-     */
-    public function scopeWithinExact(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
-    {
-        // First apply bounding box filter for performance
-        $builder = $this->scopeWithin($builder, $distance, $unit, $latitude, $longitude);
-
-        // Then filter by exact distance using Haversine formula
-        return $builder->whereRaw($this->getHaversineDistanceQuery($latitude, $longitude, $unit) . ' <= ?', [$distance]);
-    }
-
-    /**
-     * Get Haversine distance calculation SQL query.
-     */
-    private function getHaversineDistanceQuery(float $latitude, float $longitude, string $unit): string
-    {
         $earthRadius = match ($unit) {
             'kilometers' => 6371,
             'miles' => 3959,
@@ -391,13 +376,13 @@ class Address extends Model
             default => 6371,
         };
 
-        return "({$earthRadius} * acos(
-            cos(radians({$latitude})) * 
-            cos(radians(latitude)) * 
-            cos(radians(longitude) - radians({$longitude})) + 
-            sin(radians({$latitude})) * 
-            sin(radians(latitude))
-        ))";
+        $latDelta = $distance / $earthRadius * (180 / M_PI);
+        $lonDelta = $distance / $earthRadius * (180 / M_PI) / cos(deg2rad($latitude));
+
+        return $builder->whereBetween('latitude', [$latitude - $latDelta, $latitude + $latDelta])
+            ->whereBetween('longitude', [$longitude - $lonDelta, $longitude + $lonDelta])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude');
     }
 
     /**

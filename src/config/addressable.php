@@ -21,7 +21,6 @@ return [
     'database' => [
         'connection' => env('ADDRESSABLE_DB_CONNECTION', config('database.default')),
         'table' => env('ADDRESSABLE_TABLE', 'addresses'),
-        'uuid_primary_key' => env('ADDRESSABLE_UUID_PRIMARY_KEY', true),
         'spatial_support' => env('ADDRESSABLE_SPATIAL_SUPPORT', true),
     ],
 
@@ -33,27 +32,22 @@ return [
     'types' => [
         'home' => [
             'label' => 'Home Address',
-            'icon' => 'home',
             'default' => true,
         ],
         'work' => [
             'label' => 'Work Address',
-            'icon' => 'briefcase',
             'default' => false,
         ],
         'billing' => [
             'label' => 'Billing Address',
-            'icon' => 'credit-card',
             'default' => false,
         ],
         'shipping' => [
             'label' => 'Shipping Address',
-            'icon' => 'truck',
             'default' => false,
         ],
         'general' => [
             'label' => 'General Address',
-            'icon' => 'map-pin',
             'default' => false,
         ],
     ],
