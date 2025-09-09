@@ -60,7 +60,7 @@ class AddressFactory extends Factory
      */
     public function home(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'type' => 'home',
         ]);
     }
@@ -70,7 +70,7 @@ class AddressFactory extends Factory
      */
     public function work(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'type' => 'work',
         ]);
     }
@@ -80,7 +80,7 @@ class AddressFactory extends Factory
      */
     public function billing(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'type' => 'billing',
             'is_billing' => true,
         ]);
@@ -91,7 +91,7 @@ class AddressFactory extends Factory
      */
     public function shipping(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'type' => 'shipping',
             'is_shipping' => true,
         ]);
@@ -102,7 +102,7 @@ class AddressFactory extends Factory
      */
     public function primary(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_primary' => true,
         ]);
     }

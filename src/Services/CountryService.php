@@ -52,6 +52,7 @@ class CountryService
     public function getName(string $code): ?string
     {
         $country = $this->get($code);
+
         return $country['name'] ?? null;
     }
 
@@ -61,6 +62,7 @@ class CountryService
     public function getDialCode(string $code): ?string
     {
         $country = $this->get($code);
+
         return $country['dial_code'] ?? null;
     }
 
@@ -70,6 +72,7 @@ class CountryService
     public function getCurrency(string $code): ?string
     {
         $country = $this->get($code);
+
         return $country['currency'] ?? null;
     }
 
@@ -79,6 +82,7 @@ class CountryService
     public function getContinent(string $code): ?string
     {
         $country = $this->get($code);
+
         return $country['continent'] ?? null;
     }
 
@@ -146,6 +150,7 @@ class CountryService
         }
 
         asort($options);
+
         return $options;
     }
 
@@ -168,7 +173,7 @@ class CountryService
             'CN',
             'IN',
             'BR',
-            'MX'
+            'MX',
         ]);
 
         $countries = $this->getCountries();
@@ -206,6 +211,7 @@ class CountryService
     public function refreshCache(): array
     {
         $this->clearCache();
+
         return $this->getCountries();
     }
 
@@ -223,6 +229,7 @@ class CountryService
         $cached = Cache::get(self::CACHE_KEY);
         if ($cached !== null) {
             self::$countries = $cached;
+
             return self::$countries;
         }
 
@@ -241,9 +248,9 @@ class CountryService
      */
     private function loadCountriesFromFile(): array
     {
-        $filePath = __DIR__ . '/../data/countries.json';
+        $filePath = __DIR__.'/../data/countries.json';
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             throw new \RuntimeException("Countries data file not found at: {$filePath}");
         }
 
@@ -254,7 +261,7 @@ class CountryService
 
         $countries = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("Invalid JSON in countries data file: " . json_last_error_msg());
+            throw new \RuntimeException('Invalid JSON in countries data file: '.json_last_error_msg());
         }
 
         return $countries;
@@ -274,7 +281,7 @@ class CountryService
             $currency = $country['currency'];
 
             $continents[$continent] = ($continents[$continent] ?? 0) + 1;
-            if (!empty($currency)) {
+            if (! empty($currency)) {
                 $currencies[$currency] = ($currencies[$currency] ?? 0) + 1;
             }
         }

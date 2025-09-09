@@ -43,13 +43,14 @@ class OptimizeAddressableCommand extends Command
         }
 
         // If no specific options, run all optimizations
-        if (!$this->option('clear-cache') && !$this->option('warm-cache') && !$this->option('countries')) {
+        if (! $this->option('clear-cache') && ! $this->option('warm-cache') && ! $this->option('countries')) {
             $this->clearCaches();
             $this->warmCaches();
             $this->optimizeCountries();
         }
 
         $this->info('✅ Addressable package optimization completed!');
+
         return 0;
     }
 
@@ -61,7 +62,7 @@ class OptimizeAddressableCommand extends Command
         $this->info('🧹 Clearing caches...');
 
         $prefix = config('addressable.caching.prefix', 'addressable');
-        
+
         // Clear specific cache keys
         $cacheKeys = [
             'addressable_countries_data',
@@ -90,11 +91,11 @@ class OptimizeAddressableCommand extends Command
         // Warm up countries cache
         $countryService = app(CountryService::class);
         $countries = $countryService->all();
-        $this->line("  - Loaded " . count($countries) . " countries into cache");
+        $this->line('  - Loaded '.count($countries).' countries into cache');
 
         // Warm up popular countries
         $popular = $countryService->getPopular();
-        $this->line("  - Cached " . count($popular) . " popular countries");
+        $this->line('  - Cached '.count($popular).' popular countries');
     }
 
     /**
@@ -105,16 +106,16 @@ class OptimizeAddressableCommand extends Command
         $this->info('🌍 Optimizing countries data...');
 
         $countryService = app(CountryService::class);
-        
+
         // Refresh countries cache
         $countries = $countryService->refreshCache();
-        $this->line("  - Refreshed countries cache with " . count($countries) . " countries");
+        $this->line('  - Refreshed countries cache with '.count($countries).' countries');
 
         // Get statistics
         $stats = $countryService->getStats();
-        $this->line("  - Total countries: " . $stats['total_countries']);
-        $this->line("  - Continents: " . count($stats['continents']));
-        $this->line("  - Unique currencies: " . $stats['currencies']);
+        $this->line('  - Total countries: '.$stats['total_countries']);
+        $this->line('  - Continents: '.count($stats['continents']));
+        $this->line('  - Unique currencies: '.$stats['currencies']);
 
         // Validate data integrity
         $this->validateCountriesData($countryService);
@@ -135,25 +136,25 @@ class OptimizeAddressableCommand extends Command
             if (empty($country['name'])) {
                 $errors[] = "Country {$code} missing name";
             }
-            
+
             if (empty($country['code'])) {
                 $errors[] = "Country {$code} missing code";
             }
-            
+
             if ($country['code'] !== $code) {
                 $errors[] = "Country {$code} code mismatch";
             }
 
             // Validate code format
-            if (!$countryService->isValidCode($code)) {
+            if (! $countryService->isValidCode($code)) {
                 $errors[] = "Country {$code} has invalid code format";
             }
         }
 
         if (empty($errors)) {
-            $this->line("  ✅ All countries data is valid");
+            $this->line('  ✅ All countries data is valid');
         } else {
-            $this->error("  ❌ Found " . count($errors) . " validation errors:");
+            $this->error('  ❌ Found '.count($errors).' validation errors:');
             foreach ($errors as $error) {
                 $this->line("    - {$error}");
             }

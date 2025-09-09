@@ -2,15 +2,14 @@
 
 ## 📊 Package Overview
 
-This is the **most optimized version** of the Addressable package with **ZERO external dependencies** for core functionality, supporting **170+ countries** and **full radius search capabilities**.
+This is the **most optimized version** of the Addressable package with **ZERO external dependencies** for core functionality, supporting **250+ countries** and **full radius search capabilities**.
 
 ## ✅ What's Included (Zero Dependencies)
 
-### 🌍 **Complete Country Service (170+ Countries)**
+### 🌍 **Complete Country Service (250+ Countries)**
 - **All major countries** with names, currencies, and phone codes
 - **Static array storage** for instant lookups (~0.1ms)
 - **Intelligent caching** for extended countries
-- **Fallback support** for rinvex/countries when available
 
 ### 🗺️ **Built-in Geocoding Service**
 - **Multi-provider support**: OpenStreetMap (free), Google Maps, HERE
@@ -53,8 +52,6 @@ This is the **most optimized version** of the Addressable package with **ZERO ex
     "illuminate/database": "^9.0|^10.0|^11.0|^12.0"
   },
   "suggest": {
-    "rinvex/countries": "For enhanced country data (optional)",
-    "jackpopp/geodistance": "For advanced distance calculations (optional)",
     "predis/predis": "For Redis caching support (optional)"
   }
 }
@@ -77,25 +74,12 @@ $countryName = country_name('US'); // "United States"
 $currency = country_currency('US'); // "USD"
 
 // Get phone code
-$phoneCode = country_phone('US'); // "+1"
-```
-
-### Geocoding Functions
-```php
-// Geocode address
-$coordinates = geocode_address('123 Main St, New York, NY');
-// Returns: ['latitude' => 40.7128, 'longitude' => -74.0060, 'provider' => 'openstreetmap']
-
-// Reverse geocode
-$address = reverse_geocode(40.7128, -74.0060);
-// Returns: ['formatted_address' => '123 Main St, New York, NY 10001, USA']
+$phoneCode = get_dial_code('US'); // "+1"
 ```
 
 ### Radius Search Functions
 ```php
 // Find addresses within 10km
-$addresses = find_addresses_within_radius(40.7128, -74.0060, 10, 'kilometers');
-
 // Find nearest 5 addresses
 $nearest = find_nearest_addresses(40.7128, -74.0060, 5);
 
@@ -103,13 +87,8 @@ $nearest = find_nearest_addresses(40.7128, -74.0060, 5);
 $distance = calculate_distance(40.7128, -74.0060, 40.7589, -73.9851);
 ```
 
-### Performance Monitoring
-```php
-// Get all performance statistics
-$stats = addressable_stats();
-```
 
-## 🌍 Complete Country List (170+ Countries)
+## 🌍 Complete Country List (250+ Countries)
 
 The package includes **ALL major countries** with essential data:
 
@@ -166,8 +145,6 @@ php artisan migrate
 ```php
 // Basic usage
 $countryName = country_name('US');
-$coordinates = geocode_address('123 Main St, New York, NY');
-$addresses = find_addresses_within_radius(40.7128, -74.0060, 10);
 ```
 
 ## ⚡ Performance Optimization
@@ -238,11 +215,6 @@ php artisan view:cache
 
 ## 📈 Monitoring & Analytics
 
-### Built-in Performance Metrics
-```php
-$stats = addressable_stats();
-// Returns comprehensive performance data
-```
 
 ### Key Metrics Tracked
 - **Memory usage** and peak memory
@@ -275,7 +247,7 @@ $stats = addressable_stats();
 
 This ultra-optimized package provides:
 
-✅ **170+ countries** with complete data  
+✅ **250+ countries** with complete data  
 ✅ **Zero external dependencies** for core functionality  
 ✅ **Full radius search** capabilities  
 ✅ **Multi-provider geocoding** with fallback  

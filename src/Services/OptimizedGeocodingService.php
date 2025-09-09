@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Awalhadi\Addressable\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Redis;
 
 /**
  * Ultra-optimized geocoding service with intelligent caching and fallback strategies.
@@ -19,16 +16,12 @@ use Illuminate\Support\Facades\Redis;
  * - Rate limiting and quota management
  * - Performance monitoring
  */
+/**
+ * Deprecated: merged into GeocodingService. Keeping as a thin proxy for BC.
+ */
 class OptimizedGeocodingService
 {
-    /**
-     * Cache configuration.
-     */
-    private array $cacheConfig = [
-        'prefix' => 'geocoding_',
-        'ttl' => 86400, // 24 hours
-        'batch_ttl' => 3600, // 1 hour for batch results
-    ];
+    // Intentionally empty
 
     /**
      * Provider configuration with performance priorities.
@@ -59,27 +52,9 @@ class OptimizedGeocodingService
      */
     public function geocode(string $address): ?array
     {
-        if (empty($address)) {
-            return null;
-        }
+        Log::warning('OptimizedGeocodingService is deprecated. Use GeocodingService via GeocodingDriver.');
 
-        $normalizedAddress = $this->normalizeAddress($address);
-        $cacheKey = $this->getCacheKey($normalizedAddress);
-
-        // Check cache first
-        $cached = $this->getCachedResult($cacheKey);
-        if ($cached) {
-            return $cached;
-        }
-
-        // Try providers in priority order
-        $result = $this->geocodeWithFallback($normalizedAddress);
-
-        if ($result) {
-            $this->cacheResult($cacheKey, $result);
-        }
-
-        return $result;
+        return app(GeocodingService::class)->geocode($address);
     }
 
     /**
@@ -87,37 +62,9 @@ class OptimizedGeocodingService
      */
     public function batchGeocode(array $addresses): array
     {
-        $results = [];
-        $uncachedAddresses = [];
-        $cacheKeys = [];
+        Log::warning('OptimizedGeocodingService is deprecated. Use GeocodingService via GeocodingDriver.');
 
-        // Check cache for all addresses first
-        foreach ($addresses as $index => $address) {
-            $normalizedAddress = $this->normalizeAddress($address);
-            $cacheKey = $this->getCacheKey($normalizedAddress);
-            $cacheKeys[$index] = $cacheKey;
-
-            $cached = $this->getCachedResult($cacheKey);
-            if ($cached) {
-                $results[$index] = $cached;
-            } else {
-                $uncachedAddresses[$index] = $normalizedAddress;
-            }
-        }
-
-        // Geocode uncached addresses
-        if (!empty($uncachedAddresses)) {
-            $geocodedResults = $this->batchGeocodeUncached($uncachedAddresses);
-
-            foreach ($geocodedResults as $index => $result) {
-                $results[$index] = $result;
-                if ($result) {
-                    $this->cacheResult($cacheKeys[$index], $result);
-                }
-            }
-        }
-
-        return $results;
+        return app(GeocodingService::class)->batchGeocode($addresses);
     }
 
     /**
@@ -125,20 +72,9 @@ class OptimizedGeocodingService
      */
     public function reverseGeocode(float $latitude, float $longitude): ?array
     {
-        $cacheKey = $this->getCacheKey("reverse_{$latitude}_{$longitude}");
+        Log::warning('OptimizedGeocodingService is deprecated. Use GeocodingService via GeocodingDriver.');
 
-        $cached = $this->getCachedResult($cacheKey);
-        if ($cached) {
-            return $cached;
-        }
-
-        $result = $this->reverseGeocodeWithFallback($latitude, $longitude);
-
-        if ($result) {
-            $this->cacheResult($cacheKey, $result);
-        }
-
-        return $result;
+        return app(GeocodingService::class)->reverseGeocode($latitude, $longitude);
     }
 
     /**
@@ -150,17 +86,19 @@ class OptimizedGeocodingService
 
         foreach ($enabledProviders as $provider) {
             try {
-                if (!$this->checkProviderQuota($provider)) {
+                if (! $this->checkProviderQuota($provider)) {
                     continue;
                 }
 
                 $result = $this->geocodeWithProvider($provider, $address);
                 if ($result) {
                     $this->recordProviderUsage($provider);
+
                     return $result;
                 }
             } catch (\Exception $e) {
-                Log::warning("Geocoding failed with provider {$provider}: " . $e->getMessage());
+                Log::warning("Geocoding failed with provider {$provider}: ".$e->getMessage());
+
                 continue;
             }
         }
@@ -193,7 +131,7 @@ class OptimizedGeocodingService
             'addressdetails' => 1,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -219,7 +157,7 @@ class OptimizedGeocodingService
     private function geocodeWithGoogle(string $address): ?array
     {
         $apiKey = config('addressable.geocoding.google_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
@@ -228,7 +166,7 @@ class OptimizedGeocodingService
             'key' => $apiKey,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -255,7 +193,7 @@ class OptimizedGeocodingService
     private function geocodeWithHere(string $address): ?array
     {
         $apiKey = config('addressable.geocoding.here_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
@@ -264,7 +202,7 @@ class OptimizedGeocodingService
             'apiKey' => $apiKey,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -294,17 +232,19 @@ class OptimizedGeocodingService
 
         foreach ($enabledProviders as $provider) {
             try {
-                if (!$this->checkProviderQuota($provider)) {
+                if (! $this->checkProviderQuota($provider)) {
                     continue;
                 }
 
                 $result = $this->reverseGeocodeWithProvider($provider, $latitude, $longitude);
                 if ($result) {
                     $this->recordProviderUsage($provider);
+
                     return $result;
                 }
             } catch (\Exception $e) {
-                Log::warning("Reverse geocoding failed with provider {$provider}: " . $e->getMessage());
+                Log::warning("Reverse geocoding failed with provider {$provider}: ".$e->getMessage());
+
                 continue;
             }
         }
@@ -337,7 +277,7 @@ class OptimizedGeocodingService
             'addressdetails' => 1,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -359,7 +299,7 @@ class OptimizedGeocodingService
     private function reverseGeocodeWithGoogle(float $latitude, float $longitude): ?array
     {
         $apiKey = config('addressable.geocoding.google_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
@@ -368,7 +308,7 @@ class OptimizedGeocodingService
             'key' => $apiKey,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -392,7 +332,7 @@ class OptimizedGeocodingService
     private function reverseGeocodeWithHere(float $latitude, float $longitude): ?array
     {
         $apiKey = config('addressable.geocoding.here_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
@@ -401,7 +341,7 @@ class OptimizedGeocodingService
             'apiKey' => $apiKey,
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return null;
         }
 
@@ -469,7 +409,7 @@ class OptimizedGeocodingService
      */
     private function getCacheKey(string $identifier): string
     {
-        return $this->cacheConfig['prefix'] . md5($identifier);
+        return $this->cacheConfig['prefix'].md5($identifier);
     }
 
     /**
@@ -527,6 +467,7 @@ class OptimizedGeocodingService
     private function calculateConfidence(array $result): float
     {
         $importance = $result['importance'] ?? 0;
+
         return min(1.0, $importance);
     }
 
@@ -556,6 +497,7 @@ class OptimizedGeocodingService
     private function getHereConfidence(array $item): float
     {
         $scoring = $item['scoring'] ?? [];
+
         return (float) ($scoring['queryScore'] ?? 0.5);
     }
 
@@ -622,12 +564,7 @@ class OptimizedGeocodingService
      */
     public function getStats(): array
     {
-        return [
-            'cache_config' => $this->cacheConfig,
-            'providers' => $this->providers,
-            'memory_usage' => memory_get_usage(true),
-            'peak_memory' => memory_get_peak_usage(true),
-        ];
+        return ['deprecated' => true];
     }
 
     /**
@@ -635,8 +572,6 @@ class OptimizedGeocodingService
      */
     public function clearCache(): void
     {
-        // This would need to be implemented based on your cache driver
-        // For Redis: Redis::del(Redis::keys($this->cacheConfig['prefix'] . '*'));
-        // For file cache: File::deleteDirectory(storage_path('framework/cache/data/' . $this->cacheConfig['prefix']));
+        // no-op
     }
 }

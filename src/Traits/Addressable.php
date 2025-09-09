@@ -36,7 +36,7 @@ trait Addressable
     public function addresses(): MorphMany
     {
         // return $this->morphMany(config('address.models.address'), 'addressable', 'addressable_type', 'addressable_id');
-        return $this->morphMany(Address::class, 'addressable', 'addressable_type', 'addressable_id');
+        return $this->morphMany(Address::class, 'addressable', 'addressable_type', 'addressable_id')->withoutTrashed();
     }
 
     /**
@@ -120,7 +120,7 @@ trait Addressable
      */
     public function createManyAddresses(array $addresses): \Illuminate\Database\Eloquent\Collection
     {
-        $createdAddresses = new \Illuminate\Database\Eloquent\Collection();
+        $createdAddresses = new \Illuminate\Database\Eloquent\Collection;
 
         foreach ($addresses as $addressData) {
             $createdAddresses->push($this->addresses()->create($addressData));
@@ -185,6 +185,4 @@ trait Addressable
         return self::whereHas('addresses', fn ($query) => $query->within($distance, $distanceType, $latitude, $longitude))
             ->with('addresses');
     }
-
-
 }

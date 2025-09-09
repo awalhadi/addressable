@@ -14,7 +14,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('addresses', function (Blueprint $table) {
-            // Primary key with UUID support
             $table->uuid('id')->primary();
 
             // Polymorphic relationship
@@ -39,7 +38,7 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('postal_code')->nullable();
             $table->string('country_code', 2)->nullable();
-            $table->string('country_name')->nullable();
+            // $table->string('country_name')->nullable();
             $table->string('neighborhood')->nullable();
             $table->string('district')->nullable();
 

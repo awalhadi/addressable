@@ -35,7 +35,7 @@ trait HasAddressCaching
      */
     public function cacheAddress(): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -50,7 +50,7 @@ trait HasAddressCaching
      */
     public function getCachedAddress(): ?array
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return null;
         }
 
@@ -62,7 +62,7 @@ trait HasAddressCaching
      */
     public function clearAddressCache(): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -87,7 +87,7 @@ trait HasAddressCaching
      */
     public function cacheAddressableAddresses(array $addresses, string $type = 'all'): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -102,7 +102,7 @@ trait HasAddressCaching
      */
     public function getCachedAddressableAddresses(string $type = 'all'): ?array
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return null;
         }
 
@@ -112,39 +112,38 @@ trait HasAddressCaching
     /**
      * Cache geocoding results.
      */
-    public function cacheGeocodingResult(string $address, array $coordinates): bool
+    public function cacheGeocodingResult(array $geocodingResult): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
         $ttl = config('addressable.caching.ttl.geocoding', 86400);
-        $key = $this->getGeocodingCacheKey($address);
+        $key = $this->getGeocodingCacheKey($this->id);
 
-        return Cache::put($key, $coordinates, $ttl);
+        return Cache::put($key, $geocodingResult, $ttl);
     }
 
     /**
      * Get cached geocoding results.
      */
-    public function getCachedGeocodingResult(string $address): ?array
+    public function getCachedGeocodingResult(): ?array
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return null;
         }
 
-        return Cache::get($this->getGeocodingCacheKey($address));
+        return Cache::get($this->getGeocodingCacheKey($this->id));
     }
 
     /**
      * Get the geocoding cache key.
      */
-    protected function getGeocodingCacheKey(string $address): string
+    protected function getGeocodingCacheKey(string $identifier): string
     {
         $prefix = config('addressable.caching.prefix', 'addressable');
-        $hash = md5($address);
 
-        return "{$prefix}:geocoding:{$hash}";
+        return "{$prefix}:geocoding:{$identifier}";
     }
 
     /**
@@ -152,7 +151,7 @@ trait HasAddressCaching
      */
     public function cacheValidationResult(string $type, array $data, bool $isValid): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -167,7 +166,7 @@ trait HasAddressCaching
      */
     public function getCachedValidationResult(string $type, array $data): ?bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return null;
         }
 
@@ -190,7 +189,7 @@ trait HasAddressCaching
      */
     public function cacheDistanceCalculation(float $lat1, float $lon1, float $lat2, float $lon2, string $unit, float $distance): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -205,7 +204,7 @@ trait HasAddressCaching
      */
     public function getCachedDistanceCalculation(float $lat1, float $lon1, float $lat2, float $lon2, string $unit): ?float
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return null;
         }
 
@@ -219,7 +218,7 @@ trait HasAddressCaching
     {
         $prefix = config('addressable.caching.prefix', 'addressable');
         $coordinates = "{$lat1},{$lon1}:{$lat2},{$lon2}";
-        $hash = md5($coordinates . $unit);
+        $hash = md5($coordinates.$unit);
 
         return "{$prefix}:distance:{$hash}";
     }
@@ -229,7 +228,7 @@ trait HasAddressCaching
      */
     public function clearAllRelatedCaches(): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -249,10 +248,8 @@ trait HasAddressCaching
             Cache::forget($key);
         }
 
-        // Clear geocoding cache if coordinates changed
-        if ($this->wasChanged(['latitude', 'longitude']) && $this->full_address) {
-            Cache::forget($this->getGeocodingCacheKey($this->full_address));
-        }
+        // Clear geocoding cache
+        Cache::forget($this->getGeocodingCacheKey($this->id));
 
         return true;
     }
@@ -262,7 +259,7 @@ trait HasAddressCaching
      */
     public function warmCache(): bool
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return false;
         }
 
@@ -295,14 +292,12 @@ trait HasAddressCaching
         return $this->getCachedAddress();
     }
 
-
-
     /**
      * Get cache statistics for this address.
      */
     public function getCacheStats(): array
     {
-        if (!config('addressable.caching.enabled')) {
+        if (! config('addressable.caching.enabled')) {
             return [];
         }
 

@@ -10,7 +10,8 @@ use Illuminate\Queue\SerializesModels;
 
 class AddressDeleted
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     /**
      * Create a new event instance.

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Awalhadi\Addressable\Models;
 
+use Awalhadi\Addressable\Contracts\GeocodingDriver;
 use Awalhadi\Addressable\Events\AddressCreated;
 use Awalhadi\Addressable\Events\AddressDeleted;
 use Awalhadi\Addressable\Events\AddressUpdated;
-use Awalhadi\Addressable\Services\GeocodingService;
-use Awalhadi\Addressable\Services\ValidationService;
 use Awalhadi\Addressable\Services\CountryService;
-use Awalhadi\Addressable\Traits\HasSpatialOperations;
-use Awalhadi\Addressable\Traits\HasAddressValidation;
+use Awalhadi\Addressable\Services\ValidationService;
 use Awalhadi\Addressable\Traits\HasAddressCaching;
+use Awalhadi\Addressable\Traits\HasAddressValidation;
+use Awalhadi\Addressable\Traits\HasSpatialOperations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,17 +20,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class Address extends Model
 {
+    use HasAddressCaching;
+    use HasAddressValidation;
     use HasFactory;
+    use HasSpatialOperations;
     use HasUuids;
     use SoftDeletes;
-    use HasSpatialOperations;
-    use HasAddressValidation;
-    use HasAddressCaching;
 
     /**
      * The table associated with the model.
@@ -56,7 +55,6 @@ class Address extends Model
         'state',
         'postal_code',
         'country_code',
-        'country_name',
         'neighborhood',
         'district',
         'latitude',
@@ -74,32 +72,32 @@ class Address extends Model
      */
     protected $casts = [
         'addressable_id' => 'string',
-        'type' => 'string',
-        'label' => 'string',
-        'given_name' => 'string',
-        'family_name' => 'string',
-        'organization' => 'string',
-        'phone' => 'string',
-        'email' => 'string',
-        'street' => 'string',
-        'street_2' => 'string',
-        'city' => 'string',
-        'state' => 'string',
-        'postal_code' => 'string',
-        'country_code' => 'string',
-        'neighborhood' => 'string',
-        'district' => 'string',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
-        'is_primary' => 'boolean',
-        'is_billing' => 'boolean',
-        'is_shipping' => 'boolean',
-        'is_verified' => 'boolean',
-        'metadata' => 'array',
-        'verified_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'type'           => 'string',
+        'label'          => 'string',
+        'given_name'     => 'string',
+        'family_name'    => 'string',
+        'organization'   => 'string',
+        'phone'          => 'string',
+        'email'          => 'string',
+        'street'         => 'string',
+        'street_2'       => 'string',
+        'city'           => 'string',
+        'state'          => 'string',
+        'postal_code'    => 'string',
+        'country_code'   => 'string',
+        'neighborhood'   => 'string',
+        'district'       => 'string',
+        'latitude'       => 'decimal:8',
+        'longitude'      => 'decimal:8',
+        'is_primary'     => 'boolean',
+        'is_billing'     => 'boolean',
+        'is_shipping'    => 'boolean',
+        'is_verified'    => 'boolean',
+        'metadata'       => 'array',
+        'verified_at'    => 'datetime',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
+        'deleted_at'     => 'datetime',
     ];
 
     /**
@@ -113,6 +111,7 @@ class Address extends Model
         'masked_phone',
         'masked_email',
     ];
+
     /**
      * The attributes that should be hidden for arrays.
      */
@@ -181,23 +180,15 @@ class Address extends Model
         }
 
         // If no country_code, return null
-        if (!$this->country_code) {
+        if (! $this->country_code) {
             return null;
         }
 
         // Try lightweight country service first
-        $countryName = CountryService::getName($this->country_code);
+        $countryService = app(CountryService::class);
+        $countryName = $countryService->getName($this->country_code);
         if ($countryName) {
             return $countryName;
-        }
-
-        // Fallback to rinvex/countries if available
-        if (class_exists('Rinvex\Country\Country')) {
-            try {
-                return country($this->country_code)->getName();
-            } catch (\Exception $e) {
-                Log::warning("Could not get country name for code: {$this->country_code}");
-            }
         }
 
         // Return country code as fallback
@@ -209,7 +200,7 @@ class Address extends Model
      */
     public function getFormattedPhoneAttribute(): ?string
     {
-        if (!$this->phone) {
+        if (! $this->phone) {
             return null;
         }
 
@@ -222,7 +213,7 @@ class Address extends Model
      */
     public function getMaskedPhoneAttribute(): ?string
     {
-        if (!$this->phone) {
+        if (! $this->phone) {
             return null;
         }
 
@@ -231,7 +222,7 @@ class Address extends Model
             return str_repeat('*', $length);
         }
 
-        return substr($this->phone, 0, 2) . str_repeat('*', $length - 4) . substr($this->phone, -2);
+        return substr($this->phone, 0, 2).str_repeat('*', $length - 4).substr($this->phone, -2);
     }
 
     /**
@@ -239,7 +230,7 @@ class Address extends Model
      */
     public function getMaskedEmailAttribute(): ?string
     {
-        if (!$this->email) {
+        if (! $this->email) {
             return null;
         }
 
@@ -254,10 +245,10 @@ class Address extends Model
         if (strlen($username) <= 2) {
             $maskedUsername = str_repeat('*', strlen($username));
         } else {
-            $maskedUsername = substr($username, 0, 1) . str_repeat('*', strlen($username) - 2) . substr($username, -1);
+            $maskedUsername = substr($username, 0, 1).str_repeat('*', strlen($username) - 2).substr($username, -1);
         }
 
-        return $maskedUsername . '@' . $domain;
+        return $maskedUsername.'@'.$domain;
     }
 
     /**
@@ -273,7 +264,7 @@ class Address extends Model
      */
     public function isComplete(): bool
     {
-        return !empty($this->street) && !empty($this->city) && !empty($this->country_code);
+        return ! empty($this->street) && ! empty($this->city) && ! empty($this->country_code);
     }
 
     /**
@@ -399,7 +390,7 @@ class Address extends Model
             }
 
             // Auto-geocode if enabled and coordinates are missing
-            if (config('addressable.geocoding.enabled') && !$address->hasCoordinates() && $address->isComplete()) {
+            if (config('addressable.geocoding.enabled') && ! $address->hasCoordinates() && $address->isComplete()) {
                 $address->geocode();
             }
         });
@@ -418,6 +409,11 @@ class Address extends Model
             }
         });
 
+        static::updated(function (self $address) {
+            // Clear related caches on update
+            $address->clearAddressCache();
+        });
+
         static::deleted(function (self $address) {
             // Clear related caches
             $address->clearAddressCache();
@@ -429,21 +425,22 @@ class Address extends Model
      */
     public function geocode(): bool
     {
-        if (!$this->isComplete()) {
+        if (! $this->isComplete()) {
             return false;
         }
 
         try {
-            $geocodingService = app(GeocodingService::class);
+            $geocodingService = app(GeocodingDriver::class);
             $coordinates = $geocodingService->geocode($this->full_address);
 
             if ($coordinates) {
                 $this->latitude = $coordinates['latitude'];
                 $this->longitude = $coordinates['longitude'];
+
                 return true;
             }
         } catch (\Exception $e) {
-            Log::warning("Geocoding failed for address {$this->id}: " . $e->getMessage());
+            Log::warning("Geocoding failed for address {$this->id}: ".$e->getMessage());
         }
 
         return false;
@@ -466,7 +463,8 @@ class Address extends Model
 
             return $isValid;
         } catch (\Exception $e) {
-            Log::warning("Address verification failed for address {$this->id}: " . $e->getMessage());
+            Log::warning("Address verification failed for address {$this->id}: ".$e->getMessage());
+
             return false;
         }
     }
@@ -474,31 +472,30 @@ class Address extends Model
     /**
      * Calculate distance to another address.
      */
-    public function distanceTo(self $address, string $unit = null): ?float
+    public function distanceTo(self $address, ?string $unit = null): ?float
     {
-        if (!$this->hasCoordinates() || !$address->hasCoordinates()) {
+        if (! $this->hasCoordinates() || ! $address->hasCoordinates()) {
             return null;
         }
 
         $unit = $unit ?? config('addressable.spatial.default_unit', 'kilometers');
-        $method = config('addressable.spatial.distance_calculation', 'haversine');
 
         return $this->calculateDistance(
-            $this->latitude,
-            $this->longitude,
-            $address->latitude,
-            $address->longitude,
-            $unit,
-            $method
+            (float) $this->latitude,
+            (float) $this->longitude,
+            (float) $address->latitude,
+            (float) $address->longitude,
+            $unit
         );
     }
 
     /**
      * Check if this address is within a certain radius of another address.
      */
-    public function isWithinRadius(self $address, float $radius, string $unit = null): bool
+    public function isWithinRadius(self $address, float $radius, ?string $unit = null): bool
     {
         $distance = $this->distanceTo($address, $unit);
+
         return $distance !== null && $distance <= $radius;
     }
 
@@ -508,6 +505,7 @@ class Address extends Model
     public function isValid(): bool
     {
         $errors = $this->getValidationErrors();
+
         return empty($errors);
     }
 
@@ -516,25 +514,7 @@ class Address extends Model
      */
     public function getValidationErrors(): array
     {
-        $errors = [];
-
-        if (!$this->validatePostalCode()) {
-            $errors['postal_code'] = 'Invalid postal code format';
-        }
-
-        if (!$this->validatePhoneNumber()) {
-            $errors['phone'] = 'Invalid phone number format';
-        }
-
-        if (!$this->validateEmail()) {
-            $errors['email'] = 'Invalid email format';
-        }
-
-        if (!$this->validateCountryCode()) {
-            $errors['country_code'] = 'Invalid country code';
-        }
-
-        return $errors;
+        return $this->validateAddress();
     }
 
     /**
@@ -542,7 +522,7 @@ class Address extends Model
      */
     public function formatPostalCode(): ?string
     {
-        if (!$this->postal_code || !$this->country_code) {
+        if (! $this->postal_code || ! $this->country_code) {
             return $this->postal_code;
         }
 
@@ -564,7 +544,7 @@ class Address extends Model
         $postalCode = preg_replace('/[^0-9-]/', '', $postalCode);
 
         if (strlen($postalCode) === 9) {
-            return substr($postalCode, 0, 5) . '-' . substr($postalCode, 5);
+            return substr($postalCode, 0, 5).'-'.substr($postalCode, 5);
         }
 
         return $postalCode;
@@ -578,7 +558,7 @@ class Address extends Model
         $postalCode = strtoupper(preg_replace('/[^A-Z0-9]/', '', $postalCode));
 
         if (strlen($postalCode) === 6) {
-            return substr($postalCode, 0, 3) . ' ' . substr($postalCode, 3);
+            return substr($postalCode, 0, 3).' '.substr($postalCode, 3);
         }
 
         return $postalCode;
@@ -589,7 +569,7 @@ class Address extends Model
      */
     public function formatPhoneNumber(): ?string
     {
-        if (!$this->phone || !$this->country_code) {
+        if (! $this->phone || ! $this->country_code) {
             return $this->phone;
         }
 
@@ -608,11 +588,11 @@ class Address extends Model
     private function formatUSPhoneNumber(string $phone): string
     {
         if (strlen($phone) === 10) {
-            return '(' . substr($phone, 0, 3) . ') ' . substr($phone, 3, 3) . '-' . substr($phone, 6);
+            return '('.substr($phone, 0, 3).') '.substr($phone, 3, 3).'-'.substr($phone, 6);
         }
 
         if (strlen($phone) === 11 && $phone[0] === '1') {
-            return '+1 (' . substr($phone, 1, 3) . ') ' . substr($phone, 4, 3) . '-' . substr($phone, 7);
+            return '+1 ('.substr($phone, 1, 3).') '.substr($phone, 4, 3).'-'.substr($phone, 7);
         }
 
         return $phone;
@@ -624,7 +604,7 @@ class Address extends Model
     private function formatGBPhoneNumber(string $phone): string
     {
         if (strlen($phone) === 10) {
-            return substr($phone, 0, 4) . ' ' . substr($phone, 4, 3) . ' ' . substr($phone, 7);
+            return substr($phone, 0, 4).' '.substr($phone, 4, 3).' '.substr($phone, 7);
         }
 
         return $phone;
@@ -636,20 +616,21 @@ class Address extends Model
     public function reverseGeocode(): bool
     {
         try {
-            if (!$this->hasCoordinates()) {
+            if (! $this->hasCoordinates()) {
                 return false;
             }
 
-            $geocodingService = app(GeocodingService::class);
-            $result = $geocodingService->reverseGeocode($this->latitude, $this->longitude);
+            $geocodingService = app(GeocodingDriver::class);
+            $result = $geocodingService->reverseGeocode((float) $this->latitude, (float) $this->longitude);
 
             if ($result) {
                 $this->fill($result);
                 $this->save();
+
                 return true;
             }
         } catch (\Exception $e) {
-            Log::warning("Reverse geocoding failed for address {$this->id}: " . $e->getMessage());
+            Log::warning("Reverse geocoding failed for address {$this->id}: ".$e->getMessage());
         }
 
         return false;

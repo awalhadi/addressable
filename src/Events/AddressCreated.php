@@ -10,7 +10,8 @@ use Illuminate\Queue\SerializesModels;
 
 class AddressCreated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     /**
      * Create a new event instance.

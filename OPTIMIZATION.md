@@ -114,13 +114,7 @@ php artisan addressable:optimize --warm-cache
 php artisan addressable:optimize --countries
 ```
 
-## Migration from rinvex/countries
-
-The package automatically replaces `rinvex/countries` functionality:
-
-### Before (rinvex/countries)
 ```php
-use Rinvex\Countries\CountryLoader;
 
 $country = country('US');
 $name = $country->getName();
@@ -181,12 +175,6 @@ $addresses = Cache::remember('user_addresses_' . $userId, 3600, function () use 
 ],
 ```
 
-### Check Statistics
-
-```php
-$stats = countries()->getStats();
-// Returns: total_countries, continents, currencies, etc.
-```
 
 ## Troubleshooting
 

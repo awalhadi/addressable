@@ -10,8 +10,8 @@ trait HasAddressValidation
      * Postal code validation patterns for major countries.
      */
     protected array $postalCodePatterns = [
-        'US' => '/^\d{5}(-\d{4})?$/', // 12345 or 12345-6789
-        'CA' => '/^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$/', // A1A 1A1
+        'US' => '/^\d{5}([-\s]\d{4})?$/', // 12345, 12345-6789, or 12345 6789
+        'CA' => '/^[A-Za-z]\d[A-Za-z][\s]?\d[A-Za-z]\d$/', // A1A 1A1 or A1A1A1
         'GB' => '/^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i', // A1 1AA, A11 1AA, AA1 1AA, AA11 1AA
         'DE' => '/^\d{5}$/', // 12345
         'FR' => '/^\d{5}$/', // 12345
@@ -75,15 +75,15 @@ trait HasAddressValidation
      * Phone number validation patterns for major countries.
      */
     protected array $phonePatterns = [
-        'US' => '/^\+?1?\s*\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/',
-        'CA' => '/^\+?1?\s*\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/',
-        'GB' => '/^\+?44\s?([0-9]{4,5})\s?([0-9]{6})$/',
+        'US' => '/^\+?1?[-.\s]?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/',
+        'CA' => '/^\+?1?[-.\s]?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})$/',
+        'GB' => '/^\+?44\s?([0-9]{2,5})\s?([0-9]{3,4})\s?([0-9]{3,4})$/',
         'DE' => '/^\+?49\s?([0-9]{3,4})\s?([0-9]{3,4})\s?([0-9]{2,4})$/',
         'FR' => '/^\+?33\s?([0-9]{1})\s?([0-9]{2})\s?([0-9]{2})\s?([0-9]{2})\s?([0-9]{2})$/',
         'IT' => '/^\+?39\s?([0-9]{3})\s?([0-9]{3})\s?([0-9]{4})$/',
         'ES' => '/^\+?34\s?([0-9]{3})\s?([0-9]{3})\s?([0-9]{3})$/',
         'AU' => '/^\+?61\s?([0-9]{2})\s?([0-9]{4})\s?([0-9]{4})$/',
-        'JP' => '/^\+?81\s?([0-9]{2})\s?([0-9]{4})\s?([0-9]{4})$/',
+        'JP' => '/^\+?81\s?([0-9]{1,2})\s?([0-9]{4})\s?([0-9]{4})$/',
         'CN' => '/^\+?86\s?([0-9]{3})\s?([0-9]{4})\s?([0-9]{4})$/',
         'IN' => '/^\+?91\s?([0-9]{5})\s?([0-9]{5})$/',
         'BR' => '/^\+?55\s?([0-9]{2})\s?([0-9]{4,5})\s?([0-9]{4})$/',
@@ -98,13 +98,17 @@ trait HasAddressValidation
         $postalCode = $postalCode ?? $this->postal_code;
         $countryCode = $countryCode ?? $this->country_code;
 
-        if (empty($postalCode) || empty($countryCode)) {
-            return true; // Allow empty postal codes
+        if (is_null($postalCode) || is_null($countryCode)) {
+            return true; // Allow null postal codes
+        }
+
+        if (empty($postalCode) || empty($countryCode) || trim($postalCode) === '' || trim($countryCode) === '') {
+            return false; // Empty strings and whitespace-only strings are invalid
         }
 
         $countryCode = strtoupper($countryCode);
 
-        if (!isset($this->postalCodePatterns[$countryCode])) {
+        if (! isset($this->postalCodePatterns[$countryCode])) {
             return true; // No validation pattern for this country
         }
 
@@ -119,13 +123,17 @@ trait HasAddressValidation
         $phone = $phone ?? $this->phone;
         $countryCode = $countryCode ?? $this->country_code;
 
-        if (empty($phone) || empty($countryCode)) {
-            return true; // Allow empty phone numbers
+        if (is_null($phone) || is_null($countryCode)) {
+            return true; // Allow null phone numbers
+        }
+
+        if (empty($phone) || empty($countryCode) || trim($phone) === '' || trim($countryCode) === '') {
+            return false; // Empty strings and whitespace-only strings are invalid
         }
 
         $countryCode = strtoupper($countryCode);
 
-        if (!isset($this->phonePatterns[$countryCode])) {
+        if (! isset($this->phonePatterns[$countryCode])) {
             return true; // No validation pattern for this country
         }
 
@@ -139,8 +147,12 @@ trait HasAddressValidation
     {
         $email = $email ?? $this->email;
 
-        if (empty($email)) {
-            return true; // Allow empty emails
+        if (is_null($email)) {
+            return true; // Allow null emails
+        }
+
+        if (empty($email) || trim($email) === '') {
+            return false; // Empty strings and whitespace-only strings are invalid
         }
 
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
@@ -184,28 +196,31 @@ trait HasAddressValidation
             $errors['city'] = 'City is required';
         }
 
-        if (empty($this->country_code)) {
-            $errors['country_code'] = 'Country code is required';
-        }
+        // Country code is optional, only validate if provided
 
         // Country code validation
-        if (!$this->validateCountryCode()) {
+        if (! empty($this->country_code) && ! $this->validateCountryCode()) {
             $errors['country_code'] = 'Invalid country code';
         }
 
         // Postal code validation
-        if (config('addressable.validation.postal_code.enabled') && !$this->validatePostalCode()) {
+        if (config('addressable.validation.postal_code_validation', true) && ! $this->validatePostalCode()) {
             $errors['postal_code'] = 'Invalid postal code format for the specified country';
         }
 
         // Phone validation
-        if (config('addressable.validation.phone.enabled') && !$this->validatePhoneNumber()) {
+        if (config('addressable.validation.phone_validation', true) && ! $this->validatePhoneNumber()) {
             $errors['phone'] = 'Invalid phone number format for the specified country';
         }
 
         // Email validation
-        if (config('addressable.validation.email.enabled') && !$this->validateEmail()) {
+        if (config('addressable.validation.email_validation', true) && ! $this->validateEmail()) {
             $errors['email'] = 'Invalid email address format';
+        }
+
+        // Country code validation for empty strings
+        if (empty($this->country_code) && $this->country_code !== null) {
+            $errors['country_code'] = 'Country code cannot be empty';
         }
 
         return $errors;
@@ -247,32 +262,39 @@ trait HasAddressValidation
             case 'US':
                 // Format as 12345-6789
                 $formatted = preg_replace('/^(\d{5})(\d{4})$/', '$1-$2', $formatted);
+
                 break;
             case 'CA':
                 // Format as A1A 1A1
                 $formatted = strtoupper($formatted);
                 $formatted = preg_replace('/^([A-Z]\d[A-Z])(\d[A-Z]\d)$/', '$1 $2', $formatted);
+
                 break;
             case 'GB':
                 // Format as A1 1AA
                 $formatted = strtoupper($formatted);
+
                 break;
             case 'NL':
                 // Format as 1234 AB
                 $formatted = strtoupper($formatted);
                 $formatted = preg_replace('/^(\d{4})([A-Z]{2})$/i', '$1 $2', $formatted);
+
                 break;
             case 'BR':
                 // Format as 12345-678
                 $formatted = preg_replace('/^(\d{5})(\d{3})$/', '$1-$2', $formatted);
+
                 break;
             case 'JP':
                 // Format as 123-4567
                 $formatted = preg_replace('/^(\d{3})(\d{4})$/', '$1-$2', $formatted);
+
                 break;
             case 'IR':
                 // Format as 12345-12345
                 $formatted = preg_replace('/^(\d{5})(\d{5})$/', '$1-$2', $formatted);
+
                 break;
         }
 
@@ -302,18 +324,21 @@ trait HasAddressValidation
                 if (preg_match('/^1?(\d{3})(\d{3})(\d{4})$/', $formatted, $matches)) {
                     $formatted = "({$matches[1]}) {$matches[2]}-{$matches[3]}";
                 }
+
                 break;
             case 'GB':
                 // Format as 01234 567890
                 if (preg_match('/^44?(\d{4,5})(\d{6})$/', $formatted, $matches)) {
                     $formatted = "0{$matches[1]} {$matches[2]}";
                 }
+
                 break;
             case 'DE':
                 // Format as 0123 456789
                 if (preg_match('/^49?(\d{3,4})(\d{3,4})(\d{2,4})$/', $formatted, $matches)) {
                     $formatted = "0{$matches[1]} {$matches[2]} {$matches[3]}";
                 }
+
                 break;
         }
 

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Awalhadi\Addressable\Services;
 
 use Awalhadi\Addressable\Models\Address;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
 
 class ValidationService
 {
@@ -16,7 +16,7 @@ class ValidationService
      */
     public function verifyAddress(Address $address): bool
     {
-        if (!$address->isComplete()) {
+        if (! $address->isComplete()) {
             return false;
         }
 
@@ -35,7 +35,7 @@ class ValidationService
                 $this->verifyWithGoogle($address) ||
                 $this->verifyWithHere($address);
         } catch (\Exception $e) {
-            Log::error("Address verification failed for address {$address->id}: " . $e->getMessage());
+            Log::error("Address verification failed for address {$address->id}: ".$e->getMessage());
         }
 
         // Cache the result
@@ -66,7 +66,7 @@ class ValidationService
     protected function verifyWithGoogle(Address $address): bool
     {
         $apiKey = config('addressable.geocoding.api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return false;
         }
 
@@ -76,7 +76,7 @@ class ValidationService
                 'key' => $apiKey,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return false;
             }
 
@@ -94,7 +94,8 @@ class ValidationService
 
             return $similarity >= 0.8; // 80% similarity threshold
         } catch (\Exception $e) {
-            Log::error("Google address verification failed: " . $e->getMessage());
+            Log::error('Google address verification failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -105,7 +106,7 @@ class ValidationService
     protected function verifyWithHere(Address $address): bool
     {
         $apiKey = config('addressable.geocoding.api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return false;
         }
 
@@ -115,7 +116,7 @@ class ValidationService
                 'apiKey' => $apiKey,
             ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return false;
             }
 
@@ -132,7 +133,8 @@ class ValidationService
 
             return $similarity >= 0.8; // 80% similarity threshold
         } catch (\Exception $e) {
-            Log::error("HERE address verification failed: " . $e->getMessage());
+            Log::error('HERE address verification failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -206,7 +208,7 @@ class ValidationService
 
         $countryCode = strtoupper($countryCode);
 
-        if (!isset($patterns[$countryCode])) {
+        if (! isset($patterns[$countryCode])) {
             return true; // No validation pattern for this country
         }
 
@@ -236,7 +238,7 @@ class ValidationService
 
         $countryCode = strtoupper($countryCode);
 
-        if (!isset($patterns[$countryCode])) {
+        if (! isset($patterns[$countryCode])) {
             return true; // No validation pattern for this country
         }
 
@@ -258,6 +260,7 @@ class ValidationService
     {
         try {
             $countryService = app(CountryService::class);
+
             return $countryService->exists($countryCode);
         } catch (\Exception $e) {
             return false;
@@ -278,6 +281,7 @@ class ValidationService
         ];
 
         $hash = md5(serialize($data));
+
         return "address_validation_{$hash}";
     }
 

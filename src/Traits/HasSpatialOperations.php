@@ -127,7 +127,7 @@ trait HasSpatialOperations
                 ($lon < ($polygon[$j][0] - $polygon[$i][0]) * ($lat - $polygon[$i][1]) /
                     ($polygon[$j][1] - $polygon[$i][1]) + $polygon[$i][0])
             ) {
-                $inside = !$inside;
+                $inside = ! $inside;
             }
             $j = $i;
         }

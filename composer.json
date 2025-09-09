@@ -1,13 +1,17 @@
 {
   "name": "awalhadi/addressable",
-  "description": "A modern, feature-rich Laravel package for managing addresses with geocoding, validation, caching, and spatial operations. Perfect for e-commerce, CRM systems, and any application requiring robust address management.",
+  "description": "Ultra-lightweight Laravel package for address management with built-in geocoding, validation, and spatial operations. Zero external dependencies for core functionality.",
   "type": "library",
   "keywords": [
     "laravel",
     "address",
     "eloquent",
     "geocoding",
-    "location"
+    "location",
+    "radius-search",
+    "spatial",
+    "lightweight",
+    "performance"
   ],
   "license": "MIT",
   "authors": [
@@ -19,18 +23,15 @@
   "require": {
     "php": "^7.4|^8.0|^8.1|^8.2|^8.3|^8.4",
     "illuminate/support": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-    "illuminate/database": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
-    "jackpopp/geodistance": "^1.2.3"
+    "illuminate/database": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0|^12.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^8.0",
-    "phpunit/phpunit": "^10.0",
-    "pestphp/pest": "^2.0",
-    "pestphp/pest-plugin-laravel": "^2.0",
-    "laravel/pint": "^1.0",
-    "nunomaduro/collision": "^7.0",
+    "fakerphp/faker": "^1.0",
+    "laravel/pint": "^1.24",
     "mockery/mockery": "^1.0",
-    "fakerphp/faker": "^1.0"
+    "nunomaduro/collision": "^7.0",
+    "orchestra/testbench": "^8.0|^9.0|^10.0|^11.0",
+    "pestphp/pest": "^2.36"
   },
   "autoload": {
     "psr-4": {

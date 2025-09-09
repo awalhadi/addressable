@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Awalhadi\Addressable\Services;
 
 use Awalhadi\Addressable\Models\Address;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -171,7 +170,7 @@ class OptimizedRadiusSearchService
         $results = [];
 
         // Create spatial index if it doesn't exist
-        if (!$this->checkSpatialIndex()) {
+        if (! $this->checkSpatialIndex()) {
             $results['spatial_index'] = $this->createSpatialIndex();
         }
 
@@ -221,7 +220,7 @@ class OptimizedRadiusSearchService
         $query->selectRaw("*, ({$distanceExpression}) as distance");
 
         // Filter by actual radius using the calculated distance
-        $query->havingRaw("distance <= ?", [$radius]);
+        $query->havingRaw('distance <= ?', [$radius]);
 
         // Order by distance and apply limit/offset
         $query->orderBy('distance')
@@ -383,7 +382,7 @@ class OptimizedRadiusSearchService
             'options' => $options,
         ];
 
-        return $this->cacheConfig['prefix'] . md5(serialize($keyData));
+        return $this->cacheConfig['prefix'].md5(serialize($keyData));
     }
 
     /**
@@ -393,7 +392,8 @@ class OptimizedRadiusSearchService
     {
         try {
             $indexes = DB::select("SHOW INDEX FROM addresses WHERE Key_name = 'addresses_location_spatial'");
-            return !empty($indexes);
+
+            return ! empty($indexes);
         } catch (\Exception $e) {
             return false;
         }
@@ -406,9 +406,11 @@ class OptimizedRadiusSearchService
     {
         try {
             DB::statement('CREATE SPATIAL INDEX addresses_location_spatial ON addresses (POINT(longitude, latitude))');
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to create spatial index: ' . $e->getMessage());
+            Log::error('Failed to create spatial index: '.$e->getMessage());
+
             return false;
         }
     }
@@ -420,9 +422,11 @@ class OptimizedRadiusSearchService
     {
         try {
             DB::statement('ANALYZE TABLE addresses');
+
             return true;
         } catch (\Exception $e) {
-            Log::error('Failed to update table statistics: ' . $e->getMessage());
+            Log::error('Failed to update table statistics: '.$e->getMessage());
+
             return false;
         }
     }
@@ -455,6 +459,7 @@ class OptimizedRadiusSearchService
 
         try {
             $explain = DB::select($query);
+
             return [
                 'query_plan' => $explain,
                 'uses_index' => $this->checkIfUsesIndex($explain),
@@ -470,10 +475,11 @@ class OptimizedRadiusSearchService
     private function checkIfUsesIndex(array $explain): bool
     {
         foreach ($explain as $row) {
-            if (isset($row->key) && !empty($row->key)) {
+            if (isset($row->key) && ! empty($row->key)) {
                 return true;
             }
         }
+
         return false;
     }
 
