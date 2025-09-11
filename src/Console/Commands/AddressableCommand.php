@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace Awalhadi\Addressable\Console\Commands;
 
 use Awalhadi\Addressable\Services\CountryService;
+use Awalhadi\Addressable\Services\RadiusSearchService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 
-class OptimizeAddressableCommand extends Command
+class AddressableCommand extends Command
 {
     /**
      * The name and signature of the console command.
      */
-    protected $signature = 'addressable:optimize 
+    protected $signature = 'addressable:optimize
                             {--clear-cache : Clear all addressable caches}
                             {--warm-cache : Warm up caches}
-                            {--countries : Optimize countries data}';
+                            {--countries : Optimize countries data}
+                            {--spatial : Optimize spatial search performance}
+                            {--spatial-stats : Show spatial search statistics}';
 
     /**
      * The console command description.
@@ -42,11 +45,20 @@ class OptimizeAddressableCommand extends Command
             $this->optimizeCountries();
         }
 
+        if ($this->option('spatial')) {
+            $this->optimizeSpatial();
+        }
+
+        if ($this->option('spatial-stats')) {
+            $this->showSpatialStats();
+        }
+
         // If no specific options, run all optimizations
-        if (! $this->option('clear-cache') && ! $this->option('warm-cache') && ! $this->option('countries')) {
+        if (! $this->option('clear-cache') && ! $this->option('warm-cache') && ! $this->option('countries') && ! $this->option('spatial') && ! $this->option('spatial-stats')) {
             $this->clearCaches();
             $this->warmCaches();
             $this->optimizeCountries();
+            $this->optimizeSpatial();
         }
 
         $this->info('✅ Addressable package optimization completed!');
@@ -159,5 +171,86 @@ class OptimizeAddressableCommand extends Command
                 $this->line("    - {$error}");
             }
         }
+    }
+
+    /**
+     * Optimize spatial search performance.
+     */
+    private function optimizeSpatial(): void
+    {
+        $this->info('🗺️ Optimizing spatial search performance...');
+
+        $spatialService = app(RadiusSearchService::class);
+
+        // Optimize database for spatial queries
+        $results = $spatialService->optimizeDatabase();
+
+        if (isset($results['spatial_index'])) {
+            $this->line('  - Spatial index: ' . ($results['spatial_index'] ? '✅ Created' : '❌ Failed to create'));
+        }
+
+        if (isset($results['table_stats'])) {
+            $this->line('  - Table statistics: ' . ($results['table_stats'] ? '✅ Updated' : '❌ Failed to update'));
+        }
+
+        if (isset($results['query_analysis'])) {
+            $analysis = $results['query_analysis'];
+            if (isset($analysis['uses_index'])) {
+                $this->line('  - Query optimization: ' . ($analysis['uses_index'] ? '✅ Using indexes' : '⚠️ Not using indexes'));
+            }
+        }
+
+        // Get spatial statistics
+        $stats = $spatialService->getSpatialStats();
+        $this->line('  - Total addresses: ' . $stats['total_addresses']);
+        $this->line('  - Addresses with coordinates: ' . $stats['addresses_with_coordinates']);
+        $this->line('  - Coordinate coverage: ' . round($stats['coordinate_coverage'], 2) . '%');
+        $this->line('  - Spatial index exists: ' . ($stats['spatial_index_exists'] ? '✅ Yes' : '❌ No'));
+
+        // Get performance metrics
+        $metrics = $spatialService->getPerformanceMetrics();
+        $this->line('  - Available algorithms: ' . implode(', ', $metrics['algorithms']));
+        $this->line('  - Memory usage: ' . $this->formatBytes($metrics['memory_usage']));
+    }
+
+    /**
+     * Show spatial search statistics.
+     */
+    private function showSpatialStats(): void
+    {
+        $this->info('📊 Spatial Search Statistics');
+
+        $spatialService = app(RadiusSearchService::class);
+        $stats = $spatialService->getSpatialStats();
+        $metrics = $spatialService->getPerformanceMetrics();
+
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Total Addresses', number_format($stats['total_addresses'])],
+                ['Addresses with Coordinates', number_format($stats['addresses_with_coordinates'])],
+                ['Coordinate Coverage', round($stats['coordinate_coverage'], 2) . '%'],
+                ['Spatial Index Exists', $stats['spatial_index_exists'] ? 'Yes' : 'No'],
+                ['Cache TTL', $stats['cache_stats']['cache_ttl'] . ' seconds'],
+                ['Cache Prefix', $stats['cache_stats']['cache_prefix']],
+                ['Available Algorithms', implode(', ', $metrics['algorithms'])],
+                ['Memory Usage', $this->formatBytes($metrics['memory_usage'])],
+                ['Peak Memory', $this->formatBytes($metrics['peak_memory'])],
+            ]
+        );
+    }
+
+    /**
+     * Format bytes to human readable format.
+     */
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= pow(1024, $pow);
+
+        return round($bytes, 2) . ' ' . $units[$pow];
     }
 }

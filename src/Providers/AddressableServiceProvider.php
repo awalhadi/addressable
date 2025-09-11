@@ -2,10 +2,9 @@
 
 namespace Awalhadi\Addressable\Providers;
 
-use Awalhadi\Addressable\Contracts\GeocodingDriver;
 use Awalhadi\Addressable\Services\CountryService;
 use Awalhadi\Addressable\Services\GeocodingService;
-use Awalhadi\Addressable\Services\OptimizedGeocodingService;
+use Awalhadi\Addressable\Services\RadiusSearchService;
 use Awalhadi\Addressable\Services\ValidationService;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,18 +19,12 @@ class AddressableServiceProvider extends ServiceProvider
 
         $this->app->singleton(GeocodingService::class, fn ($app) => new GeocodingService);
 
-        // Bind the geocoding driver contract to the configured implementation
-        $this->app->singleton(GeocodingDriver::class, function ($app) {
-            $driver = config('addressable.geocoding.driver', 'basic');
-
-            return match ($driver) {
-                'optimized' => $app->make(OptimizedGeocodingService::class),
-                default => $app->make(GeocodingService::class),
-            };
-        });
-
         $this->app->singleton(ValidationService::class, function ($app) {
             return new ValidationService;
+        });
+
+        $this->app->singleton(RadiusSearchService::class, function ($app) {
+            return new RadiusSearchService;
         });
     }
 
@@ -46,7 +39,7 @@ class AddressableServiceProvider extends ServiceProvider
         // Register console commands
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Awalhadi\Addressable\Console\Commands\OptimizeAddressableCommand::class,
+                \Awalhadi\Addressable\Console\Commands\AddressableCommand::class,
             ]);
 
             // Publish config file

@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Ultra-optimized radius search service with advanced database optimization.
- *
  * Features:
  * - Multi-algorithm distance calculations (Haversine, Vincenty, Spherical Law)
  * - Database-level spatial indexing
@@ -19,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  * - Batch processing for large datasets
  * - Performance monitoring and optimization
  */
-class OptimizedRadiusSearchService
+class RadiusSearchService
 {
     /**
      * Cache configuration.
@@ -500,8 +498,17 @@ class OptimizedRadiusSearchService
      */
     public function clearCache(): void
     {
-        // Implementation depends on cache driver
-        // For Redis: Redis::del(Redis::keys($this->cacheConfig['prefix'] . '*'));
+        try {
+            // Clear cache using Laravel's cache tags if supported
+            if (method_exists(Cache::getStore(), 'tags')) {
+                Cache::tags(['radius_search'])->flush();
+            } else {
+                // Fallback: clear cache keys manually (simplified approach)
+                Log::info('Clearing radius search cache - manual implementation needed for non-tagged cache drivers');
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to clear radius search cache: ' . $e->getMessage());
+        }
     }
 
     /**

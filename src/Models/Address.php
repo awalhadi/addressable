@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Awalhadi\Addressable\Models;
 
-use Awalhadi\Addressable\Contracts\GeocodingDriver;
+use Awalhadi\Addressable\Services\GeocodingService;
 use Awalhadi\Addressable\Events\AddressCreated;
 use Awalhadi\Addressable\Events\AddressDeleted;
 use Awalhadi\Addressable\Events\AddressUpdated;
 use Awalhadi\Addressable\Services\CountryService;
+use Awalhadi\Addressable\Services\RadiusSearchService;
 use Awalhadi\Addressable\Services\ValidationService;
 use Awalhadi\Addressable\Traits\HasAddressCaching;
 use Awalhadi\Addressable\Traits\HasAddressValidation;
@@ -357,6 +358,8 @@ class Address extends Model
 
     /**
      * Scope to get addresses within a certain distance from coordinates.
+     *
+     * @deprecated Use scopeWithinOptimized for better performance
      */
     public function scopeWithin(Builder $builder, float $distance, string $unit, float $latitude, float $longitude): Builder
     {
@@ -374,6 +377,78 @@ class Address extends Model
             ->whereBetween('longitude', [$longitude - $lonDelta, $longitude + $lonDelta])
             ->whereNotNull('latitude')
             ->whereNotNull('longitude');
+    }
+
+    /**
+     * Optimized scope to get addresses within a certain distance from coordinates.
+     * Uses RadiusSearchService for better performance with caching and spatial indexing.
+     */
+    public function scopeWithinOptimized(Builder $builder, float $distance, string $unit, float $latitude, float $longitude, array $options = []): Builder
+    {
+        $optimizedService = app(RadiusSearchService::class);
+
+        // Get optimized results with distance calculation
+        $results = $optimizedService->findWithinRadius(
+            $latitude,
+            $longitude,
+            $distance,
+            $unit,
+            array_merge($options, [
+                'addressable_type' => $this->addressable_type ?? null,
+                'addressable_id' => $this->addressable_id ?? null,
+            ])
+        );
+
+        // Extract IDs from results
+        $addressIds = array_column($results, 'id');
+
+        if (empty($addressIds)) {
+            // Return empty result if no addresses found
+            return $builder->whereRaw('1 = 0');
+        }
+
+        return $builder->whereIn('id', $addressIds)
+            ->orderByRaw('FIELD(id, ' . implode(',', $addressIds) . ')');
+    }
+
+    /**
+     * Find nearest addresses using optimized service.
+     */
+    public static function findNearestOptimized(
+        float $latitude,
+        float $longitude,
+        int $limit = 10,
+        string $unit = 'kilometers',
+        array $options = []
+    ): array {
+        $optimizedService = app(RadiusSearchService::class);
+
+        return $optimizedService->findNearest(
+            $latitude,
+            $longitude,
+            $limit,
+            $unit,
+            $options
+        );
+    }
+
+    /**
+     * Batch find addresses within radius using optimized service.
+     */
+    public static function batchFindWithinRadiusOptimized(
+        array $points,
+        float $radius,
+        string $unit = 'kilometers',
+        array $options = []
+    ): array {
+        $optimizedService = app(RadiusSearchService::class);
+
+        return $optimizedService->batchFindWithinRadius(
+            $points,
+            $radius,
+            $unit,
+            $options
+        );
     }
 
     /**
@@ -430,7 +505,7 @@ class Address extends Model
         }
 
         try {
-            $geocodingService = app(GeocodingDriver::class);
+            $geocodingService = app(GeocodingService::class);
             $coordinates = $geocodingService->geocode($this->full_address);
 
             if ($coordinates) {
@@ -620,7 +695,7 @@ class Address extends Model
                 return false;
             }
 
-            $geocodingService = app(GeocodingDriver::class);
+            $geocodingService = app(GeocodingService::class);
             $result = $geocodingService->reverseGeocode((float) $this->latitude, (float) $this->longitude);
 
             if ($result) {

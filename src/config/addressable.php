@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 return [
     'geocoding' => [
-        // 'basic' uses GeocodingService, 'optimized' uses
-        'driver' => env('ADDRESSABLE_GEOCODING_DRIVER', 'basic'),
-
-        // Legacy provider options used by GeocodingService
-        'provider' => env('ADDRESSABLE_GEOCODING_PROVIDER', 'google'),
+        // Legacy provider options (deprecated, use providers array instead)
+        'provider' => env('ADDRESSABLE_GEOCODING_PROVIDER', 'google_maps'),
         'api_key' => env('ADDRESSABLE_GEOCODING_API_KEY'),
 
-        // Optimized service keys
+        // Provider-specific API keys
         'google_api_key' => env('ADDRESSABLE_GOOGLE_API_KEY'),
         'here_api_key' => env('ADDRESSABLE_HERE_API_KEY'),
 
@@ -19,8 +16,8 @@ return [
         'cache_results' => env('ADDRESSABLE_GEOCODING_CACHE_RESULTS', true),
         'cache_ttl' => env('ADDRESSABLE_GEOCODING_CACHE_TTL', 86400),
 
-        // Ordered list of providers for the optimized driver
-        'providers' => ['openstreetmap', 'google', 'here'],
+        // Ordered list of providers for geocoding
+        'providers' => ['openstreetmap', 'google_maps'],
         'enabled' => env('ADDRESSABLE_GEOCODING_ENABLED', true),
     ],
 
@@ -28,7 +25,7 @@ return [
         'preload_popular' => true,
         'cache_enabled' => true,
         'popular_countries' => [
-            'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'JP', 'CN', 'IN', 'BR', 'MX',
+            'BN', 'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'JP', 'CN', 'IN', 'BR', 'MX',
         ],
     ],
 

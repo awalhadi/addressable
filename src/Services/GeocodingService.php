@@ -4,13 +4,30 @@ declare(strict_types=1);
 
 namespace Awalhadi\Addressable\Services;
 
-use Awalhadi\Addressable\Contracts\GeocodingDriver;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class GeocodingService implements GeocodingDriver
+class GeocodingService
 {
+    /**
+     * Provider configuration with performance priorities.
+     */
+    private array $providers = [
+        'openstreetmap' => [
+            'priority' => 1,
+            'free'     => true,
+        ],
+        'google_maps' => [
+            'priority' => 2,
+            'free'     => false,
+        ],
+        'here_maps' => [
+            'priority' => 3,
+            'free'     => false,
+        ],
+    ];
+
     /**
      * Unified, production-grade geocoding with multi-provider fallback, caching and batch support.
      */
@@ -83,14 +100,14 @@ class GeocodingService implements GeocodingDriver
 
     private function geocodeWithFallback(string $address): ?array
     {
-        $providers = config('addressable.geocoding.providers', ['openstreetmap', 'google', 'here']);
+        $providers = config('addressable.geocoding.providers', ['openstreetmap', 'google_maps', 'here_maps']);
 
         foreach ($providers as $provider) {
             try {
                 $result = match ($provider) {
                     'openstreetmap' => $this->geocodeWithOpenStreetMap($address),
-                    'google' => $this->geocodeWithGoogle($address),
-                    'here' => $this->geocodeWithHere($address),
+                    'google_maps' => $this->geocodeWithGoogle($address),
+                    'here_maps' => $this->geocodeWithHere($address),
                     default => null,
                 };
 
@@ -107,14 +124,14 @@ class GeocodingService implements GeocodingDriver
 
     private function reverseWithFallback(float $latitude, float $longitude): ?array
     {
-        $providers = config('addressable.geocoding.providers', ['openstreetmap', 'google', 'here']);
+        $providers = config('addressable.geocoding.providers', ['openstreetmap', 'google_maps', 'here_maps']);
 
         foreach ($providers as $provider) {
             try {
                 $result = match ($provider) {
                     'openstreetmap' => $this->reverseWithOpenStreetMap($latitude, $longitude),
-                    'google' => $this->reverseWithGoogle($latitude, $longitude),
-                    'here' => $this->reverseWithHere($latitude, $longitude),
+                    'google_maps' => $this->reverseWithGoogle($latitude, $longitude),
+                    'here_maps' => $this->reverseWithHere($latitude, $longitude),
                     default => null,
                 };
 
@@ -156,6 +173,7 @@ class GeocodingService implements GeocodingDriver
             'longitude' => (float) $result['lon'],
             'provider' => 'openstreetmap',
             'formatted_address' => $result['display_name'] ?? null,
+            'confidence' => $this->calculateOpenStreetMapConfidence($result),
         ];
     }
 
@@ -188,8 +206,9 @@ class GeocodingService implements GeocodingDriver
         return [
             'latitude' => (float) $result['lat'],
             'longitude' => (float) $result['lng'],
-            'provider' => 'google',
+            'provider' => 'google_maps',
             'formatted_address' => $data['results'][0]['formatted_address'] ?? null,
+            'confidence' => $this->calculateGoogleConfidence($data['results'][0]),
         ];
     }
 
@@ -222,8 +241,9 @@ class GeocodingService implements GeocodingDriver
         return [
             'latitude' => (float) $position['lat'],
             'longitude' => (float) $position['lng'],
-            'provider' => 'here',
+            'provider' => 'here_maps',
             'formatted_address' => $data['items'][0]['title'] ?? null,
+            'confidence' => $this->calculateHereConfidence($data['items'][0]),
         ];
     }
 
@@ -247,6 +267,7 @@ class GeocodingService implements GeocodingDriver
 
         return [
             'formatted_address' => $data['display_name'] ?? null,
+            'provider' => 'openstreetmap',
             'street_number' => $addr['house_number'] ?? null,
             'route' => $addr['road'] ?? null,
             'locality' => $addr['city'] ?? $addr['town'] ?? $addr['village'] ?? null,
@@ -281,6 +302,7 @@ class GeocodingService implements GeocodingDriver
 
         return [
             'formatted_address' => $data['results'][0]['formatted_address'] ?? null,
+            'provider' => 'google_maps',
             'street_number' => $this->component($components, 'street_number'),
             'route' => $this->component($components, 'route'),
             'locality' => $this->component($components, 'locality'),
@@ -315,6 +337,7 @@ class GeocodingService implements GeocodingDriver
 
         return [
             'formatted_address' => $address['label'] ?? null,
+            'provider' => 'here_maps',
             'street_number' => $address['houseNumber'] ?? null,
             'route' => $address['street'] ?? null,
             'locality' => $address['city'] ?? null,
@@ -364,6 +387,83 @@ class GeocodingService implements GeocodingDriver
     }
 
     public function clearAllGeocodingCache(): void
+    {
+        Log::info('Requested geocoding cache clear (no-op without cache tags)');
+    }
+
+    /**
+     * Calculate confidence score for OpenStreetMap results.
+     */
+    private function calculateOpenStreetMapConfidence(array $result): float
+    {
+        $importance = $result['importance'] ?? 0;
+        return min(1.0, $importance);
+    }
+
+    /**
+     * Get confidence score for Google results.
+     */
+    private function calculateGoogleConfidence(array $result): float
+    {
+        $types = $result['types'] ?? [];
+
+        if (in_array('street_address', $types)) {
+            return 0.9;
+        } elseif (in_array('route', $types)) {
+            return 0.8;
+        } elseif (in_array('locality', $types)) {
+            return 0.7;
+        } elseif (in_array('administrative_area_level_1', $types)) {
+            return 0.6;
+        }
+
+        return 0.5;
+    }
+
+    /**
+     * Get confidence score for HERE results.
+     */
+    private function calculateHereConfidence(array $item): float
+    {
+        $scoring = $item['scoring'] ?? [];
+        return (float) ($scoring['queryScore'] ?? 0.5);
+    }
+
+    /**
+     * Get enabled providers in priority order.
+     */
+    private function getEnabledProviders(): array
+    {
+        $enabled = config('addressable.geocoding.providers', ['openstreetmap']);
+
+        return array_filter($enabled, function ($provider) {
+            return isset($this->providers[$provider]);
+        });
+    }
+
+
+    /**
+     * Get performance statistics.
+     */
+    public function getStats(): array
+    {
+        $stats = [];
+
+        foreach ($this->providers as $provider => $config) {
+            $stats[$provider] = [
+                'priority' => $config['priority'],
+                'free' => $config['free'],
+                'enabled' => in_array($provider, config('addressable.geocoding.providers', [])),
+            ];
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Clear all geocoding cache.
+     */
+    public function clearCache(): void
     {
         Log::info('Requested geocoding cache clear (no-op without cache tags)');
     }

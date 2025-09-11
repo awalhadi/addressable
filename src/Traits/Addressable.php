@@ -157,6 +157,8 @@ trait Addressable
 
     /**
      * Find addressables by distance.
+     *
+     * @deprecated Use findByDistanceOptimized for better performance
      */
     public static function findByDistance(float $latitude, float $longitude, float $distance = 10, ?string $unit = null)
     {
@@ -173,6 +175,8 @@ trait Addressable
 
     /**
      * Search addressables within a specified radius.
+     *
+     * @deprecated Use searchByRadiusOptimized for better performance
      */
     public static function searchByRadius(float $latitude, float $longitude, float $distance = 10, ?string $unit = null)
     {
@@ -184,5 +188,75 @@ trait Addressable
 
         return self::whereHas('addresses', fn ($query) => $query->within($distance, $distanceType, $latitude, $longitude))
             ->with('addresses');
+    }
+
+    /**
+     * Find addressables by distance using optimized service.
+     */
+    public static function findByDistanceOptimized(
+        float $latitude,
+        float $longitude,
+        float $distance = 10,
+        ?string $unit = null,
+        array $options = []
+    ) {
+        $distanceType = match ($unit) {
+            'km' => 'kilometers',
+            'mile' => 'miles',
+            default => 'kilometers',
+        };
+
+        return self::whereHas('addresses', function ($query) use ($latitude, $longitude, $distance, $distanceType, $options) {
+            $query->withinOptimized($distance, $distanceType, $latitude, $longitude, $options);
+        });
+    }
+
+    /**
+     * Search addressables within a specified radius using optimized service.
+     */
+    public static function searchByRadiusOptimized(
+        float $latitude,
+        float $longitude,
+        float $distance = 10,
+        ?string $unit = null,
+        array $options = []
+    ) {
+        $distanceType = match ($unit) {
+            'km' => 'kilometers',
+            'mile' => 'miles',
+            default => 'kilometers',
+        };
+
+        return self::whereHas('addresses', function ($query) use ($latitude, $longitude, $distance, $distanceType, $options) {
+            $query->withinOptimized($distance, $distanceType, $latitude, $longitude, $options);
+        })->with('addresses');
+    }
+
+    /**
+     * Find nearest addressables using optimized service.
+     */
+    public static function findNearestOptimized(
+        float $latitude,
+        float $longitude,
+        int $limit = 10,
+        ?string $unit = null,
+        array $options = []
+    ): array {
+        $distanceType = match ($unit) {
+            'km' => 'kilometers',
+            'mile' => 'miles',
+            default => 'kilometers',
+        };
+
+        $modelClass = get_called_class();
+        $options['addressable_type'] = $modelClass;
+
+        return \Awalhadi\Addressable\Models\Address::findNearestOptimized(
+            $latitude,
+            $longitude,
+            $limit,
+            $distanceType,
+            $options
+        );
     }
 }
